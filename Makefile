@@ -1,12 +1,12 @@
 CXX=g++
 CXXFLAGS=-Iheaders
-LDFLAGS=-lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
+LDFLAGS=-lglfw -lvulkan
 SRCDIR=.
 OBJDIR=bin/obj
-BINDIR=.
+BINDIR=bin
 SOURCES=SimpleCube.cpp
 OBJECTS=$(patsubst %.cpp,$(OBJDIR)/%.o,$(SOURCES))
-EXECUTABLE=$(BINDIR)/bin/VulkanTest
+EXECUTABLE=$(BINDIR)/exec.out
 
 all: $(EXECUTABLE)
 
