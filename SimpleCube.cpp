@@ -141,7 +141,7 @@ class SimpleCube : public BaseProject {
 		// The second parameter is the pointer to the vertex definition for this model
 		// The third parameter is the file name
 		// The last is a constant specifying the file type: currently only OBJ or GLTF
-		M1.init(this,   &VD, "Models/Cube.obj", OBJ);
+		M1.init(this,   &VD, "models/Cube.obj", OBJ);
 
 		// Creates a mesh with direct enumeration of vertices and indices
 		M2.vertices = {{{-3,-1,-3}, {0.0f,0.0f}}, {{-3,-1,3}, {0.0f,1.0f}},
