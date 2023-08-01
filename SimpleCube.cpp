@@ -1,6 +1,7 @@
 // This has been adapted from the Vulkan tutorial
 
 #include "Starter.hpp"
+#include "CSVReader.hpp"
 
 // The uniform buffer objects data structures
 // Remember to use the correct alignas(...) value
@@ -23,35 +24,63 @@ struct Vertex {
 	glm::vec2 UV;
 };
 
+struct VertexBar {
+	glm::vec3 pos;
+	glm::vec3 colour;
+};
+
 
 // MAIN ! 
 class SimpleCube : public BaseProject {
-	protected:
+	public:
+	SimpleCube(const CSVReader& csv) : BaseProject(), csv(csv) {
+		M_bars = new Model<VertexBar>[csv.getNumVariables()];
+		DS_bars = new DescriptorSet[csv.getNumVariables()];
+		ubo_bars = new UniformBlock[csv.getNumVariables()];
+	}
 
+	~SimpleCube() {
+        // Deallocate the memory used by the models array
+        delete[] M_bars;
+		delete[] DS_bars;
+		delete[] ubo_bars;
+    }
+
+	protected:
+	CSVReader csv;
 	// Current aspect ratio (used by the callback that resized the window
 	float Ar;
 
 	// Descriptor Layouts ["classes" of what will be passed to the shaders]
 	DescriptorSetLayout DSL;
+	DescriptorSetLayout DSL_bar;
+
 
 	// Vertex formats
 	VertexDescriptor VD;
+	VertexDescriptor VD_bar;
 
 	// Pipelines [Shader couples]
 	Pipeline P;
+	Pipeline P_bar;
 
 	// Models, textures and Descriptors (values assigned to the uniforms)
 	// Please note that Model objects depends on the corresponding vertex structure
 	// Models
 	Model<Vertex> M1, M2;
+	Model<VertexBar> * M_bars;
+
+
 	// Descriptor sets
 	DescriptorSet DS;
 	DescriptorSet DS2;
+	DescriptorSet * DS_bars;
 	// Textures
 	Texture T;
 	
 	// C++ storage for uniform variables
 	UniformBlock ubo, ubo2;
+	UniformBlock* ubo_bars;
 
 	// Other application parameters
 
@@ -80,6 +109,10 @@ class SimpleCube : public BaseProject {
 	// Here you load and setup all your Vulkan Models and Texutures.
 	// Here you also create your Descriptor set layouts and load the shaders for the pipelines
 	void localInit() {
+		DSL_bar.init(this, {
+					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
+				});
+
 		// Descriptor Layouts [what will be passed to the shaders]
 		DSL.init(this, {
 					// this array contains the bindings:
@@ -90,6 +123,15 @@ class SimpleCube : public BaseProject {
 					//                  using the corresponding Vulkan constant
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
 					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}
+				});
+
+		VD_bar.init(this, {
+				  {0, sizeof(VertexBar), VK_VERTEX_INPUT_RATE_VERTEX}
+				}, {
+				  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexBar, pos),
+				         sizeof(glm::vec3), POSITION},
+				  {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexBar, colour),
+				         sizeof(glm::vec3), COLOR}
 				});
 
 		// Vertex descriptors
@@ -134,6 +176,8 @@ class SimpleCube : public BaseProject {
 		// be used in this pipeline. The first element will be set 0, and so on..
 		P.init(this, &VD, "shaders/ShaderVert.spv", "shaders/ShaderFrag.spv", {&DSL});
 
+		P_bar.init(this, &VD_bar, "shaders/ShaderBarVert.spv", "shaders/ShaderBarFrag.spv", {&DSL_bar});
+
 		// Models, textures and Descriptors (values assigned to the uniforms)
 
 		// Create models
@@ -147,6 +191,35 @@ class SimpleCube : public BaseProject {
 					    {{3,-1,-3}, {1.0f,0.0f}}, {{3,-1,3}, {1.0f,1.0f}}};
 		M2.indices = {0, 1, 2,    1, 3, 2};
 		M2.initMesh(this, &VD);
+
+		//create a parallelepiped of a random color for each bar (separated by 1)
+		for (int i = 0; i < csv.getNumVariables(); i++) {
+			//create a parallelepiped of a random color
+			float r = (float)rand() / (float)RAND_MAX;
+			float g = (float)rand() / (float)RAND_MAX;
+			float b = (float)rand() / (float)RAND_MAX;
+			M_bars[i].vertices = {
+				{{i,0,0}, {r,g,b}}, // bottom left
+				{{i,0,1}, {r,g,b}}, // top left
+				{{i+1,0,0}, {r,g,b}}, // bottom right
+				{{i+1,0,1}, {r,g,b}}, // top right
+				{{i,1,0}, {r,g,b}}, // bottom left
+				{{i,1,1}, {r,g,b}}, // top left
+				{{i+1,1,0}, {r,g,b}}, // bottom right
+				{{i+1,1,1}, {r,g,b}} // top right
+				
+			};
+			M_bars[i].indices = {
+				0, 1, 2, 1, 3, 2, // bottom
+				0, 1, 4, 1, 5, 4, // left
+				2, 3, 6, 3, 7, 6, // right
+				4, 5, 6, 5, 7, 6, // top
+				1, 3, 5, 3, 7, 5, // front
+				0, 2, 4, 2, 6, 4 // back
+			};
+			M_bars[i].initMesh(this, &VD_bar);
+		}
+
 		
 		// Create the textures
 		// The second parameter is the file name
@@ -182,6 +255,13 @@ class SimpleCube : public BaseProject {
 					{0, UNIFORM, sizeof(UniformBlock), nullptr},
 					{1, TEXTURE, 0, &T}
 				});
+
+		P_bar.create();
+		for (int i = 0; i < csv.getNumVariables(); i++) {
+			DS_bars[i].init(this, &DSL_bar, {
+					{0, UNIFORM, sizeof(UniformBlock), nullptr}
+				});
+		}
 	}
 
 	// Here you destroy your pipelines and Descriptor Sets!
@@ -193,6 +273,11 @@ class SimpleCube : public BaseProject {
 		// Cleanup datasets
 		DS.cleanup();
 		DS2.cleanup();
+
+		P_bar.cleanup();
+		for (int i = 0; i < csv.getNumVariables(); i++) {
+			DS_bars[i].cleanup();
+		}
 	}
 
 	// Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -211,7 +296,15 @@ class SimpleCube : public BaseProject {
 		DSL.cleanup();
 		
 		// Destroies the pipelines
-		P.destroy();		
+		P.destroy();	
+
+		DSL_bar.cleanup();
+
+		for (int i = 0; i < csv.getNumVariables(); i++) {
+			M_bars[i].cleanup();
+		}	
+
+		P_bar.destroy();
 	}
 	
 	// Here it is the creation of the command buffer:
@@ -247,6 +340,14 @@ class SimpleCube : public BaseProject {
 		M2.bind(commandBuffer);
 		vkCmdDrawIndexed(commandBuffer,
 				static_cast<uint32_t>(M2.indices.size()), 1, 0, 0, 0);
+
+		P_bar.bind(commandBuffer);
+		for (int i = 0; i < csv.getNumVariables(); i++) {
+			DS_bars[i].bind(commandBuffer, P_bar, 0, currentImage);
+			M_bars[i].bind(commandBuffer);
+			vkCmdDrawIndexed(commandBuffer,
+					static_cast<uint32_t>(M_bars[i].indices.size()), 1, 0, 0, 0);
+		}
 	
 	}
 
@@ -302,13 +403,20 @@ class SimpleCube : public BaseProject {
 		// the second parameter is the pointer to the C++ data structure to transfer to the GPU
 		// the third parameter is its size
 		// the fourth parameter is the location inside the descriptor set of this uniform block
+
+		for (int i = 0; i < csv.getNumVariables(); i++) {
+			ubo_bars[i].mvpMat = Prj * View * World;
+			ubo_bars[i].height = 1;
+			DS_bars[i].map(currentImage, &ubo_bars[i], sizeof(ubo_bars[i]), 0);
+		}
 	}	
 };
 
 
 // This is the main: probably you do not need to touch this!
 int main() {
-    SimpleCube app;
+    CSVReader csv("credit_evolution.csv");
+    SimpleCube app(csv);
 
     try {
         app.run();
