@@ -12,6 +12,7 @@
 //        mat4  : alignas(16)
 // Example:
 struct UniformBlock {
+	alignas(4) float height;
 	alignas(16) glm::mat4 mvpMat;
 };
 
@@ -21,9 +22,6 @@ struct Vertex {
 	glm::vec3 pos;
 	glm::vec2 UV;
 };
-
-
-
 
 
 // MAIN ! 
@@ -48,11 +46,12 @@ class SimpleCube : public BaseProject {
 	Model<Vertex> M1, M2;
 	// Descriptor sets
 	DescriptorSet DS;
+	DescriptorSet DS2;
 	// Textures
 	Texture T;
 	
 	// C++ storage for uniform variables
-	UniformBlock ubo;
+	UniformBlock ubo, ubo2;
 
 	// Other application parameters
 
@@ -66,9 +65,9 @@ class SimpleCube : public BaseProject {
 		initialBackgroundColor = {0.0f, 0.005f, 0.01f, 1.0f};
 		
 		// Descriptor pool sizes
-		uniformBlocksInPool = 1;
-		texturesInPool = 1;
-		setsInPool = 1;
+		uniformBlocksInPool = 200;
+		texturesInPool = 100;
+		setsInPool = 200;
 		
 		Ar = (float)windowWidth / (float)windowHeight;
 	}
@@ -142,7 +141,7 @@ class SimpleCube : public BaseProject {
 		// The third parameter is the file name
 		// The last is a constant specifying the file type: currently only OBJ or GLTF
 		M1.init(this,   &VD, "models/Cube.obj", OBJ);
-
+		
 		// Creates a mesh with direct enumeration of vertices and indices
 		M2.vertices = {{{-3,-1,-3}, {0.0f,0.0f}}, {{-3,-1,3}, {0.0f,1.0f}},
 					    {{3,-1,-3}, {1.0f,0.0f}}, {{3,-1,3}, {1.0f,1.0f}}};
@@ -172,6 +171,17 @@ class SimpleCube : public BaseProject {
 					{0, UNIFORM, sizeof(UniformBlock), nullptr},
 					{1, TEXTURE, 0, &T}
 				});
+		// Here you define the data set
+		DS2.init(this, &DSL, {
+		// the second parameter, is a pointer to the Uniform Set Layout of this set
+		// the last parameter is an array, with one element per binding of the set.
+		// first  elmenet : the binding number
+		// second element : UNIFORM or TEXTURE (an enum) depending on the type
+		// third  element : only for UNIFORMs, the size of the corresponding C++ object. For texture, just put 0
+		// fourth element : only for TEXTUREs, the pointer to the corresponding texture object. For uniforms, use nullptr
+					{0, UNIFORM, sizeof(UniformBlock), nullptr},
+					{1, TEXTURE, 0, &T}
+				});
 	}
 
 	// Here you destroy your pipelines and Descriptor Sets!
@@ -182,6 +192,7 @@ class SimpleCube : public BaseProject {
 
 		// Cleanup datasets
 		DS.cleanup();
+		DS2.cleanup();
 	}
 
 	// Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -232,9 +243,11 @@ class SimpleCube : public BaseProject {
 		// the second parameter is the number of indexes to be drawn. For a Model object,
 		// this can be retrieved with the .indices.size() method.
 
+		DS2.bind(commandBuffer, P, 0, currentImage);
 		M2.bind(commandBuffer);
 		vkCmdDrawIndexed(commandBuffer,
 				static_cast<uint32_t>(M2.indices.size()), 1, 0, 0, 0);
+	
 	}
 
 	// Here is where you update the uniforms.
@@ -273,10 +286,18 @@ class SimpleCube : public BaseProject {
 		glm::vec3 camPos    = camTarget + glm::vec3(6,3,10);
 		glm::mat4 View = glm::lookAt(camPos, camTarget, glm::vec3(0,1,0));
 
+		static float L_time = 0.0;
+		L_time += 0.01;
+		ubo.height = 2+fmod(L_time,3.0f);
 
 		glm::mat4 World = glm::mat4(1);		
 		ubo.mvpMat = Prj * View * World;
 		DS.map(currentImage, &ubo, sizeof(ubo), 0);
+
+
+		ubo2.mvpMat = Prj * View * World;
+		ubo2.height=1;
+		DS2.map(currentImage, &ubo2, sizeof(ubo2), 0);
 		// the .map() method of a DataSet object, requires the current image of the swap chain as first parameter
 		// the second parameter is the pointer to the C++ data structure to transfer to the GPU
 		// the third parameter is its size
