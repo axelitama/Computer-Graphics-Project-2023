@@ -20,3 +20,16 @@ $(OBJDIR)/%.o: %.cpp
 
 clean:
 	rm -f $(OBJECTS) $(EXECUTABLE)
+
+
+SHADERSDIR=shaders
+SHADERS=$(wildcard $(SHADERSDIR)/*.vert) $(wildcard $(SHADERSDIR)/*.frag)
+SHADEROUT=$(patsubst $(SHADERSDIR)/%.vert, $(SHADERSDIR)/%Vert.spv, $(SHADERS)) $(patsubst $(SHADERSDIR)/%.frag, $(SHADERSDIR)/%Frag.spv, $(SHADERS))
+
+shaders: $(SHADEROUT)
+
+$(SHADERSDIR)/%Vert.spv: $(SHADERSDIR)/%.vert
+	glslc $< -o $@
+
+$(SHADERSDIR)/%Frag.spv: $(SHADERSDIR)/%.frag
+	glslc $< -o $@
