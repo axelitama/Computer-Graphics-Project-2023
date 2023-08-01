@@ -4,7 +4,7 @@ LDFLAGS=-lglfw -lvulkan
 SRCDIR=.
 OBJDIR=bin/obj
 BINDIR=bin
-SOURCES=SimpleCube.cpp
+SOURCES=SimpleCube.cpp CSVReader.cpp
 OBJECTS=$(patsubst %.cpp,$(OBJDIR)/%.o,$(SOURCES))
 EXECUTABLE=$(BINDIR)/exec.out
 
@@ -15,7 +15,7 @@ executable: $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
 	mkdir -p $(dir $@)
-	$(CXX) $(LDFLAGS) $^ -o $@
+	$(CXX) $^ -o $@ $(LDFLAGS)
 
 $(OBJDIR)/%.o: %.cpp
 	mkdir -p $(dir $@)
