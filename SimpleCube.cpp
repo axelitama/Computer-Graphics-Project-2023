@@ -67,19 +67,18 @@ class SimpleCube : public BaseProject {
 	// Models, textures and Descriptors (values assigned to the uniforms)
 	// Please note that Model objects depends on the corresponding vertex structure
 	// Models
-	Model<Vertex> M1, M2;
+	Model<Vertex> M_ground;
 	Model<VertexBar> * M_bars;
 
 
 	// Descriptor sets
-	DescriptorSet DS;
-	DescriptorSet DS2;
+	DescriptorSet DS_ground;
 	DescriptorSet * DS_bars;
 	// Textures
 	Texture T;
 	
 	// C++ storage for uniform variables
-	UniformBlock ubo, ubo2;
+	UniformBlock ubo_ground;
 	UniformBlock* ubo_bars;
 
 	// Other application parameters
@@ -184,13 +183,12 @@ class SimpleCube : public BaseProject {
 		// The second parameter is the pointer to the vertex definition for this model
 		// The third parameter is the file name
 		// The last is a constant specifying the file type: currently only OBJ or GLTF
-		M1.init(this,   &VD, "models/Cube.obj", OBJ);
 		
 		// Creates a mesh with direct enumeration of vertices and indices
-		M2.vertices = {{{-3,-1,-3}, {0.0f,0.0f}}, {{-3,-1,3}, {0.0f,1.0f}},
+		M_ground.vertices = {{{-3,-1,-3}, {0.0f,0.0f}}, {{-3,-1,3}, {0.0f,1.0f}},
 					    {{3,-1,-3}, {1.0f,0.0f}}, {{3,-1,3}, {1.0f,1.0f}}};
-		M2.indices = {0, 1, 2,    1, 3, 2};
-		M2.initMesh(this, &VD);
+		M_ground.indices = {0, 1, 2,    1, 3, 2};
+		M_ground.initMesh(this, &VD);
 
 		//create a parallelepiped of a random color for each bar (separated by 1)
 		for (int i = 0; i < csv.getNumVariables(); i++) {
@@ -234,7 +232,7 @@ class SimpleCube : public BaseProject {
 		P.create();
 
 		// Here you define the data set
-		DS.init(this, &DSL, {
+		DS_ground.init(this, &DSL, {
 		// the second parameter, is a pointer to the Uniform Set Layout of this set
 		// the last parameter is an array, with one element per binding of the set.
 		// first  elmenet : the binding number
@@ -245,16 +243,7 @@ class SimpleCube : public BaseProject {
 					{1, TEXTURE, 0, &T}
 				});
 		// Here you define the data set
-		DS2.init(this, &DSL, {
-		// the second parameter, is a pointer to the Uniform Set Layout of this set
-		// the last parameter is an array, with one element per binding of the set.
-		// first  elmenet : the binding number
-		// second element : UNIFORM or TEXTURE (an enum) depending on the type
-		// third  element : only for UNIFORMs, the size of the corresponding C++ object. For texture, just put 0
-		// fourth element : only for TEXTUREs, the pointer to the corresponding texture object. For uniforms, use nullptr
-					{0, UNIFORM, sizeof(UniformBlock), nullptr},
-					{1, TEXTURE, 0, &T}
-				});
+		
 
 		P_bar.create();
 		for (int i = 0; i < csv.getNumVariables(); i++) {
@@ -271,8 +260,7 @@ class SimpleCube : public BaseProject {
 		P.cleanup();
 
 		// Cleanup datasets
-		DS.cleanup();
-		DS2.cleanup();
+		DS_ground.cleanup();
 
 		P_bar.cleanup();
 		for (int i = 0; i < csv.getNumVariables(); i++) {
@@ -289,21 +277,17 @@ class SimpleCube : public BaseProject {
 		T.cleanup();
 		
 		// Cleanup models
-		M1.cleanup();
-		M2.cleanup();
-		
-		// Cleanup descriptor set layouts
-		DSL.cleanup();
-		
-		// Destroies the pipelines
-		P.destroy();	
-
-		DSL_bar.cleanup();
-
+		M_ground.cleanup();
 		for (int i = 0; i < csv.getNumVariables(); i++) {
 			M_bars[i].cleanup();
 		}	
-
+		
+		// Cleanup descriptor set layouts
+		DSL.cleanup();
+		DSL_bar.cleanup();
+		
+		// Destroies the pipelines
+		P.destroy();
 		P_bar.destroy();
 	}
 	
@@ -317,7 +301,7 @@ class SimpleCube : public BaseProject {
 		// For a pipeline object, this command binds the corresponing pipeline to the command buffer passed in its parameter
 
 		// binds the data set
-		DS.bind(commandBuffer, P, 0, currentImage);
+		DS_ground.bind(commandBuffer, P, 0, currentImage);
 		// For a Dataset object, this command binds the corresponing dataset
 		// to the command buffer and pipeline passed in its first and second parameters.
 		// The third parameter is the number of the set being bound
@@ -326,20 +310,16 @@ class SimpleCube : public BaseProject {
 		// of the current image in the swap chain, passed in its last parameter
 					
 		// binds the model
-		M1.bind(commandBuffer);
+		M_ground.bind(commandBuffer);
 		// For a Model object, this command binds the corresponing index and vertex buffer
 		// to the command buffer passed in its parameter
 		
 		// record the drawing command in the command buffer
 		vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
+				static_cast<uint32_t>(M_ground.indices.size()), 1, 0, 0, 0);
 		// the second parameter is the number of indexes to be drawn. For a Model object,
 		// this can be retrieved with the .indices.size() method.
 
-		DS2.bind(commandBuffer, P, 0, currentImage);
-		M2.bind(commandBuffer);
-		vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(M2.indices.size()), 1, 0, 0, 0);
 
 		P_bar.bind(commandBuffer);
 		for (int i = 0; i < csv.getNumVariables(); i++) {
@@ -388,17 +368,13 @@ class SimpleCube : public BaseProject {
 		glm::mat4 View = glm::lookAt(camPos, camTarget, glm::vec3(0,1,0));
 
 		static float L_time = 0.0;
-		L_time += 0.01;
-		ubo.height = 2+fmod(L_time,3.0f);
+		L_time += 0.001;
 
 		glm::mat4 World = glm::mat4(1);		
-		ubo.mvpMat = Prj * View * World;
-		DS.map(currentImage, &ubo, sizeof(ubo), 0);
 
-
-		ubo2.mvpMat = Prj * View * World;
-		ubo2.height=1;
-		DS2.map(currentImage, &ubo2, sizeof(ubo2), 0);
+		ubo_ground.mvpMat = Prj * View * World;
+		ubo_ground.height=1;
+		DS_ground.map(currentImage, &ubo_ground, sizeof(ubo_ground), 0);
 		// the .map() method of a DataSet object, requires the current image of the swap chain as first parameter
 		// the second parameter is the pointer to the C++ data structure to transfer to the GPU
 		// the third parameter is its size
@@ -406,7 +382,7 @@ class SimpleCube : public BaseProject {
 
 		for (int i = 0; i < csv.getNumVariables(); i++) {
 			ubo_bars[i].mvpMat = Prj * View * World;
-			ubo_bars[i].height = 1;
+			ubo_bars[i].height = 1+fmod(L_time*100,i)/10;
 			DS_bars[i].map(currentImage, &ubo_bars[i], sizeof(ubo_bars[i]), 0);
 		}
 	}	
