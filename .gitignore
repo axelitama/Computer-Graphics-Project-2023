@@ -1,2 +1,51 @@
 bin
 *.spv
+.vs/
+x64/
+*.bat
+
+# ------------------------------- Visual Studio --------------------------------------------
+# Compiled Object files
+*.suo
+*.obj
+*.o
+*.pdb
+
+# Compiled Dynamic libraries
+*.dll
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lib
+*.a
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Visual Studio files
+.vscode/
+.vs/
+*.sln
+*.suo
+*.vcxproj
+*.vcxproj.filters
+*.pdb
+
+# User-specific files
+*.user
+*.user.props
+*.user.settings
+
+# CMake generated files
+CMakeFiles/
+CMakeScripts/
+CMakeCache.txt
+CMakeDoxyfile.in
+cmake_install.cmake
+install_manifest.txt
+
+# Build directory
+build/

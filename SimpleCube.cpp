@@ -17,6 +17,18 @@ struct UniformBlock {
 	alignas(16) glm::mat4 mvpMat;
 };
 
+struct OverlayUniformBlock {
+	alignas(4) float visible;
+};
+
+struct GlobalUniformBlock {
+	alignas(16) glm::vec3 DlightDir;
+	alignas(16) glm::vec3 DlightColor;
+	alignas(16) glm::vec3 AmbLightColor;
+	alignas(16) glm::vec3 eyePos;
+};
+
+
 // The vertices data structures
 // Example
 struct Vertex {
@@ -54,6 +66,8 @@ class SimpleCube : public BaseProject {
 	// Descriptor Layouts ["classes" of what will be passed to the shaders]
 	DescriptorSetLayout DSL;
 	DescriptorSetLayout DSL_bar;
+	DescriptorSetLayout DSLGubo;
+
 
 
 	// Vertex formats
@@ -74,14 +88,17 @@ class SimpleCube : public BaseProject {
 	// Descriptor sets
 	DescriptorSet DS_ground;
 	DescriptorSet * DS_bars;
+	DescriptorSet DSGubo;
 	// Textures
 	Texture T;
 	
 	// C++ storage for uniform variables
 	UniformBlock ubo_ground;
 	UniformBlock* ubo_bars;
+	GlobalUniformBlock gubo;
 
 	// Other application parameters
+	float CamH, CamRadius, CamPitch, CamYaw;
 
 	// Here you set the main application parameters
 	void setWindowParameters() {
@@ -123,6 +140,9 @@ class SimpleCube : public BaseProject {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
 					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}
 				});
+		DSLGubo.init(this, {
+					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
+			});
 
 		VD_bar.init(this, {
 				  {0, sizeof(VertexBar), VK_VERTEX_INPUT_RATE_VERTEX}
@@ -173,9 +193,9 @@ class SimpleCube : public BaseProject {
 		// Third and fourth parameters are respectively the vertex and fragment shaders
 		// The last array, is a vector of pointer to the layouts of the sets that will
 		// be used in this pipeline. The first element will be set 0, and so on..
-		P.init(this, &VD, "shaders/ShaderVert.spv", "shaders/ShaderFrag.spv", {&DSL});
+		P.init(this, &VD, "shaders/ShaderVert.spv", "shaders/ShaderFrag.spv", {&DSL, &DSLGubo});
 
-		P_bar.init(this, &VD_bar, "shaders/ShaderBarVert.spv", "shaders/ShaderBarFrag.spv", {&DSL_bar});
+		P_bar.init(this, &VD_bar, "shaders/ShaderBarVert.spv", "shaders/ShaderBarFrag.spv", {&DSL_bar, &DSLGubo});
 
 		// Models, textures and Descriptors (values assigned to the uniforms)
 
@@ -224,6 +244,10 @@ class SimpleCube : public BaseProject {
 		T.init(this,   "textures/Checker.png");
 		
 		// Init local variables
+		CamH = 1.0f;
+		CamRadius = 3.0f;
+		CamPitch = glm::radians(15.f);
+		CamYaw = glm::radians(30.f);
 	}
 	
 	// Here you create your pipelines and Descriptor Sets!
@@ -242,7 +266,9 @@ class SimpleCube : public BaseProject {
 					{0, UNIFORM, sizeof(UniformBlock), nullptr},
 					{1, TEXTURE, 0, &T}
 				});
-		// Here you define the data set
+		DSGubo.init(this, &DSLGubo, {
+					{0, UNIFORM, sizeof(GlobalUniformBlock), nullptr}
+			});
 		
 
 		P_bar.create();
@@ -266,6 +292,7 @@ class SimpleCube : public BaseProject {
 		for (int i = 0; i < csv.getNumVariables(); i++) {
 			DS_bars[i].cleanup();
 		}
+		DSGubo.cleanup();
 	}
 
 	// Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -328,6 +355,8 @@ class SimpleCube : public BaseProject {
 			vkCmdDrawIndexed(commandBuffer,
 					static_cast<uint32_t>(M_bars[i].indices.size()), 1, 0, 0, 0);
 		}
+
+		DSGubo.bind(commandBuffer, P, 1, currentImage);
 	
 	}
 
@@ -360,12 +389,33 @@ class SimpleCube : public BaseProject {
 		const float FOVy = glm::radians(90.0f);
 		const float nearPlane = 0.1f;
 		const float farPlane = 100.0f;
-		
+		const float rotSpeed = glm::radians(90.0f);
+		const float movSpeed = 1.0f;
+
+		CamH += m.z * movSpeed * deltaT;
+		CamRadius -= m.x * movSpeed * deltaT;
+		CamPitch -= r.x * rotSpeed * deltaT;
+		CamYaw += r.y * rotSpeed * deltaT;
+
+
 		glm::mat4 Prj = glm::perspective(FOVy, Ar, nearPlane, farPlane);
 		Prj[1][1] *= -1;
-		glm::vec3 camTarget = glm::vec3(0,0,0);
-		glm::vec3 camPos    = camTarget + glm::vec3(6,3,10);
+		glm::vec3 camTarget = glm::vec3(0, CamH, 0);
+		glm::vec3 camPos = camTarget +
+			CamRadius * glm::vec3(cos(CamPitch) * sin(CamYaw),
+				sin(CamPitch),
+				cos(CamPitch) * cos(CamYaw));
 		glm::mat4 View = glm::lookAt(camPos, camTarget, glm::vec3(0,1,0));
+
+		gubo.DlightDir = glm::normalize(glm::vec3(1, 2, 3));
+		gubo.DlightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		gubo.AmbLightColor = glm::vec3(0.1f);
+		gubo.eyePos = camPos;
+
+		// Writes value to the GPU
+		DSGubo.map(currentImage, &gubo, sizeof(gubo), 0);
+
+		
 
 		static float L_time = 0.0;
 		L_time += 0.001;
