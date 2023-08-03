@@ -49,3 +49,7 @@ install_manifest.txt
 
 # Build directory
 build/
+
+
+# because at line 776 windows: sprintf_s; linux: sprintf
+headers/stb_image_write.h
