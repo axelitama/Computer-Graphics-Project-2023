@@ -28,11 +28,13 @@ struct GlobalUniformBlock {
 // Example
 struct VertexGround {
 	glm::vec3 pos;
+	glm::vec3 normal;
 	glm::vec2 UV;
 };
 
 struct VertexBar {
 	glm::vec3 pos;
+	glm::vec3 normal;
 	glm::vec3 colour;
 };
 
@@ -142,10 +144,9 @@ class BarChart : public BaseProject {
 		VD_bar.init(this, {
 				  {0, sizeof(VertexBar), VK_VERTEX_INPUT_RATE_VERTEX}
 				}, {
-				  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexBar, pos),
-				         sizeof(glm::vec3), POSITION},
-				  {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexBar, colour),
-				         sizeof(glm::vec3), COLOR}
+				  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexBar, pos), sizeof(glm::vec3), POSITION},
+				  {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexBar, normal), sizeof(glm::vec3), NORMAL},
+				  {0, 2, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexBar, colour), sizeof(glm::vec3), COLOR}
 				});
 
 		// Vertex descriptors
@@ -177,10 +178,9 @@ class BarChart : public BaseProject {
 				  //	in the "sizeof" in the previous array, refers to the correct one,
 				  //	if you have more than one vertex format!
 				  // ***************************************************
-				  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexGround, pos),
-				         sizeof(glm::vec3), POSITION},
-				  {0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(VertexGround, UV),
-				         sizeof(glm::vec2), UV}
+				  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexGround, pos), sizeof(glm::vec3), POSITION},
+				  {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexGround, normal), sizeof(glm::vec3), NORMAL},
+				  {0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(VertexGround, UV), sizeof(glm::vec2), UV}
 				});
 
 		// Pipelines [Shader couples]
@@ -200,35 +200,63 @@ class BarChart : public BaseProject {
 		// The last is a constant specifying the file type: currently only OBJ or GLTF
 		
 		// Creates a mesh with direct enumeration of vertices and indices
-		M_ground.vertices = {{{-3,-1,-3}, {0.0f,0.0f}}, {{-3,-1,3}, {0.0f,1.0f}},
-					    {{3,-1,-3}, {1.0f,0.0f}}, {{3,-1,3}, {1.0f,1.0f}}};
-		M_ground.indices = {0, 1, 2,    1, 3, 2};
+		M_ground.vertices = {
+						{{-3,-1,-3}, {0.f, -1.f, 0.f}, {0.0f,0.0f}},
+						{{-3,-1,3}, {0.f, -1.f, 0.f}, {0.0f,1.0f}},
+					    {{3,-1,-3}, {0.f, -1.f, 0.f}, {1.0f,0.0f}},
+						{{3,-1,3}, {0.f, -1.f, 0.f}, {1.0f,1.0f}}
+		};
+		M_ground.indices = {0, 1, 2, 1, 3, 2};
 		M_ground.initMesh(this, &VD_ground);
 
-		//create a parallelepiped of a random color for each bar (separated by 1)
+		//create parallelepipeds for bars
 		for (int i = 0; i < csv.getNumVariables(); i++) {
 			//create a parallelepiped of a random color
 			float r = (float)rand() / (float)RAND_MAX;
 			float g = (float)rand() / (float)RAND_MAX;
 			float b = (float)rand() / (float)RAND_MAX;
+			// add the vertices putting position, normal (replicated vertices) and color
 			M_bars[i].vertices = {
-				{{i,0,0}, {r,g,b}}, // bottom left
-				{{i,0,1}, {r,g,b}}, // top left
-				{{i+1,0,0}, {r,g,b}}, // bottom right
-				{{i+1,0,1}, {r,g,b}}, // top right
-				{{i,1,0}, {r,g,b}}, // bottom left
-				{{i,1,1}, {r,g,b}}, // top left
-				{{i+1,1,0}, {r,g,b}}, // bottom right
-				{{i+1,1,1}, {r,g,b}} // top right
-				
+				// bottom face
+				{{i,0,0}, {0, -1, 0}, {r,g,b}},
+				{{i,0,1}, {0, -1, 0}, {r,g,b}},
+				{{i+1,0,0}, {0, -1, 0}, {r,g,b}},
+				{{i+1,0,1}, {0, -1, 0}, {r,g,b}},
+				// top face
+				{{i,1,0}, {0, 1, 0}, {r,g,b}},
+				{{i,1,1}, {0, 1, 0}, {r,g,b}},
+				{{i+1,1,0}, {0, 1, 0}, {r,g,b}},
+				{{i+1,1,1}, {0, 1, 0}, {r,g,b}},
+				// left face
+				{{i,0,0}, {-1, 0, 0}, {r,g,b}},
+				{{i,0,1}, {-1, 0, 0}, {r,g,b}},
+				{{i,1,0}, {-1, 0, 0}, {r,g,b}},
+				{{i,1,1}, {-1, 0, 0}, {r,g,b}},
+				// right face
+				{{i+1,0,0}, {1, 0, 0}, {r,g,b}},
+				{{i+1,0,1}, {1, 0, 0}, {r,g,b}},
+				{{i+1,1,0}, {1, 0, 0}, {r,g,b}},
+				{{i+1,1,1}, {1, 0, 0}, {r,g,b}},
+				// front face
+				{{i,0,1}, {0, 0, 1}, {r,g,b}},
+				{{i+1,0,1}, {0, 0, 1}, {r,g,b}},
+				{{i,1,1}, {0, 0, 1}, {r,g,b}},
+				{{i+1,1,1}, {0, 0, 1}, {r,g,b}},
+				// back face
+				{{i,0,0}, {0, 0, -1}, {r,g,b}},
+				{{i+1,0,0}, {0, 0, -1}, {r,g,b}},
+				{{i,1,0}, {0, 0, -1}, {r,g,b}},
+				{{i+1,1,0}, {0, 0, -1}, {r,g,b}}
 			};
+
+			// add the indices
 			M_bars[i].indices = {
 				0, 1, 2, 1, 3, 2, // bottom
-				0, 1, 4, 1, 5, 4, // left
-				2, 3, 6, 3, 7, 6, // right
 				4, 5, 6, 5, 7, 6, // top
-				1, 3, 5, 3, 7, 5, // front
-				0, 2, 4, 2, 6, 4 // back
+				8, 9, 10, 9, 11, 10, // left
+				12, 13, 14, 13, 15, 14, // right
+				16, 17, 18, 17, 19, 18, // front
+				20, 21, 22, 21, 23, 22 // back
 			};
 			M_bars[i].initMesh(this, &VD_bar);
 		}
