@@ -13,12 +13,7 @@
 //        mat4  : alignas(16)
 // Example:
 struct UniformBlock {
-	alignas(4) float height;
 	alignas(16) glm::mat4 mvpMat;
-};
-
-struct OverlayUniformBlock {
-	alignas(4) float visible;
 };
 
 struct GlobalUniformBlock {
@@ -31,7 +26,7 @@ struct GlobalUniformBlock {
 
 // The vertices data structures
 // Example
-struct Vertex {
+struct VertexGround {
 	glm::vec3 pos;
 	glm::vec2 UV;
 };
@@ -43,15 +38,15 @@ struct VertexBar {
 
 
 // MAIN ! 
-class SimpleCube : public BaseProject {
+class BarChart : public BaseProject {
 	public:
-	SimpleCube(const CSVReader& csv) : BaseProject(), csv(csv) {
+	BarChart(const CSVReader& csv) : BaseProject(), csv(csv) {
 		M_bars = new Model<VertexBar>[csv.getNumVariables()];
 		DS_bars = new DescriptorSet[csv.getNumVariables()];
 		ubo_bars = new UniformBlock[csv.getNumVariables()];
 	}
 
-	~SimpleCube() {
+	~BarChart() {
         // Deallocate the memory used by the models array
         delete[] M_bars;
 		delete[] DS_bars;
@@ -64,24 +59,24 @@ class SimpleCube : public BaseProject {
 	float Ar;
 
 	// Descriptor Layouts ["classes" of what will be passed to the shaders]
-	DescriptorSetLayout DSL;
+	DescriptorSetLayout DSL_ground;
 	DescriptorSetLayout DSL_bar;
 	DescriptorSetLayout DSLGubo;
 
 
 
 	// Vertex formats
-	VertexDescriptor VD;
+	VertexDescriptor VD_ground;
 	VertexDescriptor VD_bar;
 
 	// Pipelines [Shader couples]
-	Pipeline P;
+	Pipeline P_ground;
 	Pipeline P_bar;
 
 	// Models, textures and Descriptors (values assigned to the uniforms)
 	// Please note that Model objects depends on the corresponding vertex structure
 	// Models
-	Model<Vertex> M_ground;
+	Model<VertexGround> M_ground;
 	Model<VertexBar> * M_bars;
 
 
@@ -105,7 +100,7 @@ class SimpleCube : public BaseProject {
 		// window size, titile and initial background
 		windowWidth = 800;
 		windowHeight = 600;
-		windowTitle = "Simple Cube";
+		windowTitle = "Bar Chart";
     	windowResizable = GLFW_TRUE;
 		initialBackgroundColor = {0.0f, 0.005f, 0.01f, 1.0f};
 		
@@ -130,7 +125,7 @@ class SimpleCube : public BaseProject {
 				});
 
 		// Descriptor Layouts [what will be passed to the shaders]
-		DSL.init(this, {
+		DSL_ground.init(this, {
 					// this array contains the bindings:
 					// first  element : the binding number
 					// second element : the type of element (buffer or texture)
@@ -154,13 +149,13 @@ class SimpleCube : public BaseProject {
 				});
 
 		// Vertex descriptors
-		VD.init(this, {
+		VD_ground.init(this, {
 				  // this array contains the bindings
 				  // first  element : the binding number
 				  // second element : the stride of this binging
 				  // third  element : whether this parameter change per vertex or per instance
 				  //                  using the corresponding Vulkan constant
-				  {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
+				  {0, sizeof(VertexGround), VK_VERTEX_INPUT_RATE_VERTEX}
 				}, {
 				  // this array contains the location
 				  // first  element : the binding number
@@ -182,9 +177,9 @@ class SimpleCube : public BaseProject {
 				  //	in the "sizeof" in the previous array, refers to the correct one,
 				  //	if you have more than one vertex format!
 				  // ***************************************************
-				  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos),
+				  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexGround, pos),
 				         sizeof(glm::vec3), POSITION},
-				  {0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, UV),
+				  {0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(VertexGround, UV),
 				         sizeof(glm::vec2), UV}
 				});
 
@@ -193,7 +188,7 @@ class SimpleCube : public BaseProject {
 		// Third and fourth parameters are respectively the vertex and fragment shaders
 		// The last array, is a vector of pointer to the layouts of the sets that will
 		// be used in this pipeline. The first element will be set 0, and so on..
-		P.init(this, &VD, "shaders/ShaderVert.spv", "shaders/ShaderFrag.spv", {&DSL, &DSLGubo});
+		P_ground.init(this, &VD_ground, "shaders/ShaderVert.spv", "shaders/ShaderFrag.spv", {&DSL_ground, &DSLGubo});
 
 		P_bar.init(this, &VD_bar, "shaders/ShaderBarVert.spv", "shaders/ShaderBarFrag.spv", {&DSL_bar, &DSLGubo});
 
@@ -208,7 +203,7 @@ class SimpleCube : public BaseProject {
 		M_ground.vertices = {{{-3,-1,-3}, {0.0f,0.0f}}, {{-3,-1,3}, {0.0f,1.0f}},
 					    {{3,-1,-3}, {1.0f,0.0f}}, {{3,-1,3}, {1.0f,1.0f}}};
 		M_ground.indices = {0, 1, 2,    1, 3, 2};
-		M_ground.initMesh(this, &VD);
+		M_ground.initMesh(this, &VD_ground);
 
 		//create a parallelepiped of a random color for each bar (separated by 1)
 		for (int i = 0; i < csv.getNumVariables(); i++) {
@@ -253,10 +248,10 @@ class SimpleCube : public BaseProject {
 	// Here you create your pipelines and Descriptor Sets!
 	void pipelinesAndDescriptorSetsInit() {
 		// This creates a new pipeline (with the current surface), using its shaders
-		P.create();
+		P_ground.create();
 
 		// Here you define the data set
-		DS_ground.init(this, &DSL, {
+		DS_ground.init(this, &DSL_ground, {
 		// the second parameter, is a pointer to the Uniform Set Layout of this set
 		// the last parameter is an array, with one element per binding of the set.
 		// first  elmenet : the binding number
@@ -283,7 +278,7 @@ class SimpleCube : public BaseProject {
 	// All the object classes defined in Starter.hpp have a method .cleanup() for this purpose
 	void pipelinesAndDescriptorSetsCleanup() {
 		// Cleanup pipelines
-		P.cleanup();
+		P_ground.cleanup();
 
 		// Cleanup datasets
 		DS_ground.cleanup();
@@ -310,11 +305,12 @@ class SimpleCube : public BaseProject {
 		}	
 		
 		// Cleanup descriptor set layouts
-		DSL.cleanup();
+		DSL_ground.cleanup();
 		DSL_bar.cleanup();
+		DSLGubo.cleanup();
 		
 		// Destroies the pipelines
-		P.destroy();
+		P_ground.destroy();
 		P_bar.destroy();
 	}
 	
@@ -324,11 +320,11 @@ class SimpleCube : public BaseProject {
 	
 	void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
 		// binds the pipeline
-		P.bind(commandBuffer);
+		P_ground.bind(commandBuffer);
 		// For a pipeline object, this command binds the corresponing pipeline to the command buffer passed in its parameter
 
 		// binds the data set
-		DS_ground.bind(commandBuffer, P, 0, currentImage);
+		DS_ground.bind(commandBuffer, P_ground, 0, currentImage);
 		// For a Dataset object, this command binds the corresponing dataset
 		// to the command buffer and pipeline passed in its first and second parameters.
 		// The third parameter is the number of the set being bound
@@ -356,7 +352,7 @@ class SimpleCube : public BaseProject {
 					static_cast<uint32_t>(M_bars[i].indices.size()), 1, 0, 0, 0);
 		}
 
-		DSGubo.bind(commandBuffer, P, 1, currentImage);
+		DSGubo.bind(commandBuffer, P_bar, 1, currentImage);
 	
 	}
 
@@ -423,7 +419,6 @@ class SimpleCube : public BaseProject {
 		glm::mat4 World = glm::mat4(1);		
 
 		ubo_ground.mvpMat = Prj * View * World;
-		ubo_ground.height=1;
 		DS_ground.map(currentImage, &ubo_ground, sizeof(ubo_ground), 0);
 		// the .map() method of a DataSet object, requires the current image of the swap chain as first parameter
 		// the second parameter is the pointer to the C++ data structure to transfer to the GPU
@@ -432,7 +427,6 @@ class SimpleCube : public BaseProject {
 
 		for (int i = 0; i < csv.getNumVariables(); i++) {
 			ubo_bars[i].mvpMat = Prj * View * World;
-			ubo_bars[i].height = 1+fmod(L_time*100,i)/10;
 			DS_bars[i].map(currentImage, &ubo_bars[i], sizeof(ubo_bars[i]), 0);
 		}
 	}	
@@ -442,7 +436,7 @@ class SimpleCube : public BaseProject {
 // This is the main: probably you do not need to touch this!
 int main() {
     CSVReader csv("credit_evolution.csv");
-    SimpleCube app(csv);
+    BarChart app(csv);
 
     try {
         app.run();

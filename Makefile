@@ -4,7 +4,7 @@ LDFLAGS=-lglfw -lvulkan
 SRCDIR=.
 OBJDIR=bin/obj
 BINDIR=bin
-SOURCES=SimpleCube.cpp CSVReader.cpp
+SOURCES=BarChart.cpp CSVReader.cpp
 OBJECTS=$(patsubst %.cpp,$(OBJDIR)/%.o,$(SOURCES))
 EXECUTABLE=$(BINDIR)/exec.out
 
