@@ -439,10 +439,6 @@ class BarChart : public BaseProject {
 		// Writes value to the GPU
 		DSGubo.map(currentImage, &gubo, sizeof(gubo), 0);
 
-		
-
-		static float L_time = 0.0;
-		L_time += 0.001;
 
 		glm::mat4 World = glm::mat4(1);		
 
@@ -452,11 +448,27 @@ class BarChart : public BaseProject {
 		// the second parameter is the pointer to the C++ data structure to transfer to the GPU
 		// the third parameter is its size
 		// the fourth parameter is the location inside the descriptor set of this uniform block
-
+		static float time = 0;
+		time += deltaT;
+		static int line = 0;
+		if(time >= 2.f) {
+			time = 0;
+			line++;
+			if(line >= csv.getNumLines())
+				line = 0;
+		}
 		for (int i = 0; i < csv.getNumVariables(); i++) {
+			World = getWorldMatrixBar(csv, line, i);
 			ubo_bars[i].mvpMat = Prj * View * World;
 			DS_bars[i].map(currentImage, &ubo_bars[i], sizeof(ubo_bars[i]), 0);
 		}
+		printf("\ntime: %f\nline: %d\n", time, line);
+	}
+
+	glm::mat4 getWorldMatrixBar(CSVReader csv, int line, int variable) {
+		float difference = std::stof(csv.getLine(line)[variable]);
+		glm::mat4 World =  glm::scale(glm::mat4(1), glm::vec3(1.f, difference, 1.f));
+		return World;
 	}	
 };
 
