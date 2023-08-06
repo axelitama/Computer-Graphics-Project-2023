@@ -57,6 +57,7 @@ class BarChart : public BaseProject {
 
 	protected:
 	CSVReader csv;
+	float *visualizedValues;
 	// Current aspect ratio (used by the callback that resized the window
 	float Ar;
 
@@ -274,6 +275,8 @@ class BarChart : public BaseProject {
 		CamRadius = 13.0f;
 		CamPitch = glm::radians(50.f);
 		CamYaw = glm::radians(30.f);
+
+		visualizedValues = (float *)malloc(csv.getNumVariables()*sizeof(float));
 	}
 	
 	// Here you create your pipelines and Descriptor Sets!
@@ -476,35 +479,38 @@ class BarChart : public BaseProject {
 		animationTime += deltaT;
 		time += deltaT;
 		static int line = 0;
-		static float scalingFactor = 0;
 
-		std::cout << deltaT << std::endl;
+		float valueTime = 0.2f;
 
-		if (animationTime >= 0.02f) {
-			animationTime = 0;
-			scalingFactor += 0.1f;
+		for (int i = 0; i < csv.getNumVariables(); i++) {
+			float prevValue = line==0?0:std::stof(csv.getLine(line-1)[i]);
+			float value = std::stof(csv.getLine(line)[i]);
+
+			visualizedValues[i] = prevValue +
+				(value - prevValue)* (animationTime / valueTime);
 		}
-		// every 0.2 seconds, we change the line of the csv file to be read and therefore update the bars
-		if(time >= 0.2f) {
+		
+		
+		// every valueTime seconds, we change the line of the csv file to be read and therefore update the bars
+		if(time >= valueTime) {
 			time = 0;
 			line++;
-			scalingFactor = 0;
+			animationTime = 0;
 			if(line >= csv.getNumLines())
 				line = 0; //qua potremmo mostrare un messaggio sull'overlay che dice premi "tasto" per ricominciare
 		}
+
 		for (int i = 0; i < csv.getNumVariables(); i++) {
-			World = getWorldMatrixBar(csv, line, i, scalingFactor);
+			World = getWorldMatrixBar(visualizedValues[i]);
 			ubo_bars[i].mvpMat = Prj * View * World;
 			DS_bars[i].map(currentImage, &ubo_bars[i], sizeof(ubo_bars[i]), 0);
 		}
 		printf("\ntime: %f\nline: %d\n", time, line);
 	}
 
-	glm::mat4 getWorldMatrixBar(CSVReader csv, int line, int variable, float scalingFactor) {
-		float difference = std::stof(csv.getLine(line)[variable]) * 0.2f * scalingFactor;
-		// print the difference
-		//std::cout << difference << std::endl;
-		glm::mat4 World =  glm::scale(glm::mat4(1), glm::vec3(1.f, difference, 1.f));
+	glm::mat4 getWorldMatrixBar(float height) {
+		height = height * 0.2f;
+		glm::mat4 World =  glm::scale(glm::mat4(1), glm::vec3(1.f, height, 1.f));
 		return World;
 	}	
 

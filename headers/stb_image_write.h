@@ -173,11 +173,6 @@ STBIWDEF int stbi_write_force_png_filter;
 #endif
 
 #ifndef STBI_WRITE_NO_STDIO
-STBIWDEF int stbi_write_png(char const* filename, int w, int h, int comp, const void* data, int stride_in_bytes);
-STBIWDEF int stbi_write_bmp(char const* filename, int w, int h, int comp, const void* data);
-STBIWDEF int stbi_write_tga(char const* filename, int w, int h, int comp, const void* data);
-STBIWDEF int stbi_write_hdr(char const* filename, int w, int h, int comp, const float* data);
-STBIWDEF int stbi_write_jpg(char const* filename, int x, int y, int comp, const void* data, int quality);
 STBIWDEF int stbi_write_png(char const *filename, int w, int h, int comp, const void  *data, int stride_in_bytes);
 STBIWDEF int stbi_write_bmp(char const *filename, int w, int h, int comp, const void  *data);
 STBIWDEF int stbi_write_tga(char const *filename, int w, int h, int comp, const void  *data);
@@ -469,9 +464,6 @@ static void stbiw__write_pixels(stbi__write_context *s, int rgb_dir, int vdir, i
    } else {
       j_end =  y; j = 0;
    }
-    else {
-        j_end = y; j = 0;
-    }
 
    for (; j != j_end; j += vdir) {
       for (i=0; i < x; ++i) {
