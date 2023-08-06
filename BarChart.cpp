@@ -95,7 +95,9 @@ class BarChart : public BaseProject {
 	GlobalUniformBlock gubo;
 
 	// Other application parameters
-	float CamH, CamRadius, CamPitch, CamYaw;
+	float CamH, CamRadius, CamPitch, CamYaw, targtH;
+	bool isAutoRotationEnabled = true;
+
 
 	// Here you set the main application parameters
 	void setWindowParameters() {
@@ -267,9 +269,10 @@ class BarChart : public BaseProject {
 		T.init(this,   "textures/Checker.png");
 		
 		// Init local variables
-		CamH = 1.0f;
-		CamRadius = 3.0f;
-		CamPitch = glm::radians(15.f);
+		CamH = 3.0f;
+		targtH = 10.0f;
+		CamRadius = 13.0f;
+		CamPitch = glm::radians(50.f);
 		CamYaw = glm::radians(30.f);
 	}
 	
@@ -395,8 +398,7 @@ class BarChart : public BaseProject {
 		// Integration with the timers and the controllers
 		float deltaT;
 		glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
-		bool fire = false;
-		getSixAxis(deltaT, m, r, fire);
+		getSixAxis(deltaT, m, r, isAutoRotationEnabled);
 		// getSixAxis() is defined in Starter.hpp in the base class.
 		// It fills the float point variable passed in its first parameter with the time
 		// since the last call to the procedure.
@@ -415,20 +417,42 @@ class BarChart : public BaseProject {
 		const float farPlane = 100.0f;
 		const float rotSpeed = glm::radians(90.0f);
 		const float movSpeed = 1.0f;
+		const float cameraSpeed = 1.0f;     // Adjust the speed as needed
 
-		CamH += m.z * movSpeed * deltaT;
-		CamRadius -= m.x * movSpeed * deltaT;
-		CamPitch -= r.x * rotSpeed * deltaT;
-		CamYaw += r.y * rotSpeed * deltaT;
+
+
+		//CamH += m.z * movSpeed * deltaT;
+		CamRadius += r.x * movSpeed * deltaT * 3.0f;
+		//CamPitch += r.x * rotSpeed * deltaT;
+		
+		if (isAutoRotationEnabled) {
+			CamYaw += cameraSpeed * deltaT;
+		}
+		else {
+			CamYaw += r.y * rotSpeed * deltaT;
+		}
+
+		
+        // print the controls (m variable values)
+		std::cout << m.x << " " << m.y << " " << m.z << std::endl;
+		std::cout << r.x << " " << r.y << " " << r.z << std::endl;
+
+
+
 
 
 		glm::mat4 Prj = glm::perspective(FOVy, Ar, nearPlane, farPlane);
 		Prj[1][1] *= -1;
-		glm::vec3 camTarget = glm::vec3(0, CamH, 0);
-		glm::vec3 camPos = camTarget +
-			CamRadius * glm::vec3(cos(CamPitch) * sin(CamYaw),
-				sin(CamPitch),
-				cos(CamPitch) * cos(CamYaw));
+		glm::vec3 camTarget = glm::vec3(0, targtH, 0);
+		
+
+		glm::vec3 camPos = glm::vec3(
+			CamRadius * cos(CamYaw),
+			CamH,
+			CamRadius * sin(CamYaw)
+		);
+
+
 		glm::mat4 View = glm::lookAt(camPos, camTarget, glm::vec3(0,1,0));
 
 		gubo.DlightDir = glm::normalize(glm::vec3(1, 2, 3));
@@ -448,28 +472,42 @@ class BarChart : public BaseProject {
 		// the second parameter is the pointer to the C++ data structure to transfer to the GPU
 		// the third parameter is its size
 		// the fourth parameter is the location inside the descriptor set of this uniform block
-		static float time = 0;
+		static float time = 0, animationTime = 0;
+		animationTime += deltaT;
 		time += deltaT;
 		static int line = 0;
-		if(time >= 2.f) {
+		static float scalingFactor = 0;
+
+		std::cout << deltaT << std::endl;
+
+		if (animationTime >= 0.02f) {
+			animationTime = 0;
+			scalingFactor += 0.1f;
+		}
+		// every 0.2 seconds, we change the line of the csv file to be read and therefore update the bars
+		if(time >= 0.2f) {
 			time = 0;
 			line++;
+			scalingFactor = 0;
 			if(line >= csv.getNumLines())
-				line = 0;
+				line = 0; //qua potremmo mostrare un messaggio sull'overlay che dice premi "tasto" per ricominciare
 		}
 		for (int i = 0; i < csv.getNumVariables(); i++) {
-			World = getWorldMatrixBar(csv, line, i);
+			World = getWorldMatrixBar(csv, line, i, scalingFactor);
 			ubo_bars[i].mvpMat = Prj * View * World;
 			DS_bars[i].map(currentImage, &ubo_bars[i], sizeof(ubo_bars[i]), 0);
 		}
 		printf("\ntime: %f\nline: %d\n", time, line);
 	}
 
-	glm::mat4 getWorldMatrixBar(CSVReader csv, int line, int variable) {
-		float difference = std::stof(csv.getLine(line)[variable]);
+	glm::mat4 getWorldMatrixBar(CSVReader csv, int line, int variable, float scalingFactor) {
+		float difference = std::stof(csv.getLine(line)[variable]) * 0.2f * scalingFactor;
+		// print the difference
+		//std::cout << difference << std::endl;
 		glm::mat4 World =  glm::scale(glm::mat4(1), glm::vec3(1.f, difference, 1.f));
 		return World;
 	}	
+
 };
 
 
