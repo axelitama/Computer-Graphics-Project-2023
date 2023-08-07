@@ -480,14 +480,14 @@ class BarChart : public BaseProject {
 		time += deltaT;
 		static int line = 0;
 
-		float valueTime = 0.2f;
+		float valueTime = 0.1f;
 
 		for (int i = 0; i < csv.getNumVariables(); i++) {
 			float prevValue = line==0?0:std::stof(csv.getLine(line-1)[i]);
 			float value = std::stof(csv.getLine(line)[i]);
 
 			visualizedValues[i] = prevValue +
-				(value - prevValue)* (animationTime / valueTime);
+				(value - prevValue) * (animationTime / valueTime);
 		}
 		
 		
