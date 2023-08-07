@@ -203,16 +203,18 @@ class BarChart : public BaseProject {
 		// The last is a constant specifying the file type: currently only OBJ or GLTF
 		
 		// Creates a mesh with direct enumeration of vertices and indices
+		float start = - csv.getNumVariables()/2.f;
 		M_ground.vertices = {
-						{{-3,-1,-3}, {0.f, -1.f, 0.f}, {0.0f,0.0f}},
-						{{-3,-1,3}, {0.f, -1.f, 0.f}, {0.0f,1.0f}},
-					    {{3,-1,-3}, {0.f, -1.f, 0.f}, {1.0f,0.0f}},
-						{{3,-1,3}, {0.f, -1.f, 0.f}, {1.0f,1.0f}}
+						{{start-2,-0.5,-2}, {0.f, -1.f, 0.f}, {0.0f,0.0f}},
+						{{start-2,-0.5,2}, {0.f, -1.f, 0.f}, {0.0f,1.0f}},
+					    {{-start+2,-0.5,-2}, {0.f, -1.f, 0.f}, {1.0f,0.0f}},
+						{{-start+2,-0.5,2}, {0.f, -1.f, 0.f}, {1.0f,1.0f}}
 		};
 		M_ground.indices = {0, 1, 2, 1, 3, 2};
 		M_ground.initMesh(this, &VD_ground);
 
 		//create parallelepipeds for bars
+		
 		for (int i = 0; i < csv.getNumVariables(); i++) {
 			//create a parallelepiped of a random color
 			float r = (float)rand() / (float)RAND_MAX;
@@ -221,35 +223,35 @@ class BarChart : public BaseProject {
 			// add the vertices putting position, normal (replicated vertices) and color
 			M_bars[i].vertices = {
 				// bottom face
-				{{i,0,0}, {0, -1, 0}, {r,g,b}},
-				{{i,0,1}, {0, -1, 0}, {r,g,b}},
-				{{i+1,0,0}, {0, -1, 0}, {r,g,b}},
-				{{i+1,0,1}, {0, -1, 0}, {r,g,b}},
+				{{start+i,0,-0.5}, {0, -1, 0}, {r,g,b}},
+				{{start+i,0,0.5}, {0, -1, 0}, {r,g,b}},
+				{{start+i+1,0,-0.5}, {0, -1, 0}, {r,g,b}},
+				{{start+i+1,0,0.5}, {0, -1, 0}, {r,g,b}},
 				// top face
-				{{i,1,0}, {0, 1, 0}, {r,g,b}},
-				{{i,1,1}, {0, 1, 0}, {r,g,b}},
-				{{i+1,1,0}, {0, 1, 0}, {r,g,b}},
-				{{i+1,1,1}, {0, 1, 0}, {r,g,b}},
+				{{start+i,1,-0.5}, {0, 1, 0}, {r,g,b}},
+				{{start+i,1,0.5}, {0, 1, 0}, {r,g,b}},
+				{{start+i+1,1,-0.5}, {0, 1, 0}, {r,g,b}},
+				{{start+i+1,1,0.5}, {0, 1, 0}, {r,g,b}},
 				// left face
-				{{i,0,0}, {-1, 0, 0}, {r,g,b}},
-				{{i,0,1}, {-1, 0, 0}, {r,g,b}},
-				{{i,1,0}, {-1, 0, 0}, {r,g,b}},
-				{{i,1,1}, {-1, 0, 0}, {r,g,b}},
+				{{start+i,0,-0.5}, {-1, 0, 0}, {r,g,b}},
+				{{start+i,0,0.5}, {-1, 0, 0}, {r,g,b}},
+				{{start+i,1,-0.5}, {-1, 0, 0}, {r,g,b}},
+				{{start+i,1,0.5}, {-1, 0, 0}, {r,g,b}},
 				// right face
-				{{i+1,0,0}, {1, 0, 0}, {r,g,b}},
-				{{i+1,0,1}, {1, 0, 0}, {r,g,b}},
-				{{i+1,1,0}, {1, 0, 0}, {r,g,b}},
-				{{i+1,1,1}, {1, 0, 0}, {r,g,b}},
+				{{start+i+1,0,-0.5}, {1, 0, 0}, {r,g,b}},
+				{{start+i+1,0,0.5}, {1, 0, 0}, {r,g,b}},
+				{{start+i+1,1,-0.5}, {1, 0, 0}, {r,g,b}},
+				{{start+i+1,1,0.5}, {1, 0, 0}, {r,g,b}},
 				// front face
-				{{i,0,1}, {0, 0, 1}, {r,g,b}},
-				{{i+1,0,1}, {0, 0, 1}, {r,g,b}},
-				{{i,1,1}, {0, 0, 1}, {r,g,b}},
-				{{i+1,1,1}, {0, 0, 1}, {r,g,b}},
+				{{start+i,0,0.5}, {0, 0, 1}, {r,g,b}},
+				{{start+i+1,0,0.5}, {0, 0, 1}, {r,g,b}},
+				{{start+i,1,0.5}, {0, 0, 1}, {r,g,b}},
+				{{start+i+1,1,0.5}, {0, 0, 1}, {r,g,b}},
 				// back face
-				{{i,0,0}, {0, 0, -1}, {r,g,b}},
-				{{i+1,0,0}, {0, 0, -1}, {r,g,b}},
-				{{i,1,0}, {0, 0, -1}, {r,g,b}},
-				{{i+1,1,0}, {0, 0, -1}, {r,g,b}}
+				{{start+i,0,-0.5}, {0, 0, -1}, {r,g,b}},
+				{{start+i+1,0,-0.5}, {0, 0, -1}, {r,g,b}},
+				{{start+i,1,-0.5}, {0, 0, -1}, {r,g,b}},
+				{{start+i+1,1,-0.5}, {0, 0, -1}, {r,g,b}}
 			};
 
 			// add the indices
