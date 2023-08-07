@@ -353,6 +353,7 @@ class BarChart : public BaseProject {
 	// with their buffers and textures
 	
 	void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
+		DSGubo.bind(commandBuffer, P_bar, 1, currentImage);
 		// binds the pipeline
 		P_ground.bind(commandBuffer);
 		// For a pipeline object, this command binds the corresponing pipeline to the command buffer passed in its parameter
@@ -385,8 +386,6 @@ class BarChart : public BaseProject {
 			vkCmdDrawIndexed(commandBuffer,
 					static_cast<uint32_t>(M_bars[i].indices.size()), 1, 0, 0, 0);
 		}
-
-		DSGubo.bind(commandBuffer, P_bar, 1, currentImage);
 	
 	}
 
