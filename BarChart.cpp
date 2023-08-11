@@ -97,7 +97,6 @@ class BarChart : public BaseProject {
 
 	// Other application parameters
 	float CamH, CamRadius, CamPitch, CamYaw, targtH;
-	bool isAutoRotationEnabled = true;
 
 
 	// Here you set the main application parameters
@@ -272,8 +271,8 @@ class BarChart : public BaseProject {
 		T.init(this,   "textures/Checker.png");
 		
 		// Init local variables
-		CamH = 3.0f;
-		targtH = 10.0f;
+		CamH = 0.0f;
+		targtH = 0.0f;
 		CamRadius = 13.0f;
 		CamPitch = glm::radians(50.f);
 		CamYaw = glm::radians(30.f);
@@ -402,6 +401,9 @@ class BarChart : public BaseProject {
 		// Integration with the timers and the controllers
 		float deltaT;
 		glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
+
+		static bool isAutoRotationEnabled = false;
+		
 		getSixAxis(deltaT, m, r, isAutoRotationEnabled);
 		// getSixAxis() is defined in Starter.hpp in the base class.
 		// It fills the float point variable passed in its first parameter with the time
@@ -412,7 +414,6 @@ class BarChart : public BaseProject {
 		// to motion (with right stick of the gamepad, or Arrow keys + QE keys on the keyboard, or mouse)
 		// If fills the last boolean variable with true if fire has been pressed:
 		//          SPACE on the keyboard, A or B button on the Gamepad, Right mouse button
-
 		
 		// Parameters
 		// Camera FOV-y, Near Plane and Far Plane
@@ -420,14 +421,18 @@ class BarChart : public BaseProject {
 		const float nearPlane = 0.1f;
 		const float farPlane = 100.0f;
 		const float rotSpeed = glm::radians(90.0f);
-		const float movSpeed = 1.0f;
+		const float movSpeed = 10.0f;
 		const float cameraSpeed = 1.0f;     // Adjust the speed as needed
 
+		const float minPitch = glm::radians(-30.f);
+		const float maxPitch = glm::radians(89.0f);
 
-
-		//CamH += m.z * movSpeed * deltaT;
-		CamRadius += r.x * movSpeed * deltaT * 3.0f;
-		//CamPitch += r.x * rotSpeed * deltaT;
+		// CamH += r.x * movSpeed * deltaT;
+		CamRadius += -m.z * movSpeed * deltaT * 3.0f;
+		if(CamRadius < 5) CamRadius = 5;
+		CamPitch += r.x * rotSpeed * deltaT;
+		if(CamPitch < minPitch) CamPitch = minPitch;
+		if(CamPitch > maxPitch) CamPitch = maxPitch;
 		
 		if (isAutoRotationEnabled) {
 			CamYaw += cameraSpeed * deltaT;
@@ -442,19 +447,18 @@ class BarChart : public BaseProject {
 		std::cout << r.x << " " << r.y << " " << r.z << std::endl;
 
 
-
-
-
 		glm::mat4 Prj = glm::perspective(FOVy, Ar, nearPlane, farPlane);
 		Prj[1][1] *= -1;
 		glm::vec3 camTarget = glm::vec3(0, targtH, 0);
-		
 
-		glm::vec3 camPos = glm::vec3(
-			CamRadius * cos(CamYaw),
-			CamH,
-			CamRadius * sin(CamYaw)
-		);
+		glm::mat4 camMw = glm::rotate(glm::mat4(1), CamYaw, glm::vec3(0, 1, 0));
+		
+		glm::vec3 camPos = glm::vec3(camMw * glm::vec4(
+			0,
+			CamH + CamRadius * sin(CamPitch),
+			CamRadius * cos(CamPitch),
+			1
+		));
 
 
 		glm::mat4 View = glm::lookAt(camPos, camTarget, glm::vec3(0,1,0));
@@ -507,6 +511,7 @@ class BarChart : public BaseProject {
 			DS_bars[i].map(currentImage, &ubo_bars[i], sizeof(ubo_bars[i]), 0);
 		}
 		printf("\ntime: %f\nline: %d\n", time, line);
+		printf("cam pitch: %f\ncam yaw: %f\n", CamPitch, CamYaw);
 	}
 
 	glm::mat4 getWorldMatrixBar(float height) {
