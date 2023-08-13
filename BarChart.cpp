@@ -97,7 +97,7 @@ class BarChart : public BaseProject {
 
 	// Other application parameters
 	float CamH, CamRadius, CamPitch, CamYaw, targtH;
-	bool isAutoRotationEnabled = true;
+	bool isAutoRotationEnabled = false;
 
 
 	// Here you set the main application parameters
@@ -272,7 +272,7 @@ class BarChart : public BaseProject {
 		T.init(this,   "textures/Checker.png");
 		
 		// Init local variables
-		CamH = 3.0f;
+		CamH = 10.0f;
 		targtH = 10.0f;
 		CamRadius = 13.0f;
 		CamPitch = glm::radians(50.f);
@@ -421,7 +421,7 @@ class BarChart : public BaseProject {
 		const float farPlane = 100.0f;
 		const float rotSpeed = glm::radians(90.0f);
 		const float movSpeed = 1.0f;
-		const float cameraSpeed = 1.0f;     // Adjust the speed as needed
+		const float cameraSpeed = 0.5f;  
 
 
 
@@ -433,7 +433,7 @@ class BarChart : public BaseProject {
 			CamYaw += cameraSpeed * deltaT;
 		}
 		else {
-			CamYaw += r.y * rotSpeed * deltaT;
+			CamYaw -= r.y * rotSpeed * deltaT;
 		}
 
 		
