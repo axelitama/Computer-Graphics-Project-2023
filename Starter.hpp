@@ -1833,16 +1833,9 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 			m.y = -1.0f;
 		}
 		
-		// Define a variable to keep track of the previous state of the 'Q' key
-		static int previousQState = GLFW_RELEASE;
-
-		// Check for key events
-		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_RELEASE && previousQState == GLFW_PRESS) {
-			isAutoRotationEnabled = !isAutoRotationEnabled; // Toggle the flag
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_RELEASE) {
+			isAutoRotationEnabled = true;
 		}
-
-		// Update the previousQState variable for the next frame
-		previousQState = glfwGetKey(window, GLFW_KEY_Q);
 
 		
 	}
