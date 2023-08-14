@@ -23,6 +23,10 @@ struct GlobalUniformBlock {
 	alignas(16) glm::vec3 eyePos;
 };
 
+struct OverlayUniformBlock {
+	alignas(4) float visible;
+};
+
 
 // The vertices data structures
 // Example
@@ -38,6 +42,10 @@ struct VertexBar {
 	glm::vec3 colour;
 };
 
+struct VertexOverlay {
+	glm::vec2 pos;
+	glm::vec2 UV;
+};
 
 // MAIN ! 
 class BarChart : public BaseProject {
@@ -64,23 +72,26 @@ class BarChart : public BaseProject {
 	// Descriptor Layouts ["classes" of what will be passed to the shaders]
 	DescriptorSetLayout DSL_ground;
 	DescriptorSetLayout DSL_bar;
-	DescriptorSetLayout DSLGubo;
+	DescriptorSetLayout DSLGubo, DSLOverlay;
 
 
 
 	// Vertex formats
 	VertexDescriptor VD_ground;
 	VertexDescriptor VD_bar;
+	VertexDescriptor VOverlay;
 
 	// Pipelines [Shader couples]
 	Pipeline P_ground;
 	Pipeline P_bar;
+	Pipeline POverlay;
 
 	// Models, textures and Descriptors (values assigned to the uniforms)
 	// Please note that Model objects depends on the corresponding vertex structure
 	// Models
 	Model<VertexGround> M_ground;
 	Model<VertexBar> * M_bars;
+	Model<VertexOverlay> MOverlay;
 
 
 	// Descriptor sets
@@ -94,6 +105,7 @@ class BarChart : public BaseProject {
 	UniformBlock ubo_ground;
 	UniformBlock* ubo_bars;
 	GlobalUniformBlock gubo;
+	OverlayUniformBlock uboOverlay;
 
 	// Other application parameters
 	float CamH, CamRadius, CamPitch, CamYaw, targtH;
@@ -142,6 +154,10 @@ class BarChart : public BaseProject {
 		DSLGubo.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
 			});
+		DSLOverlay.init(this, {
+					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
+					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}
+			});
 
 		VD_bar.init(this, {
 				  {0, sizeof(VertexBar), VK_VERTEX_INPUT_RATE_VERTEX}
@@ -184,6 +200,15 @@ class BarChart : public BaseProject {
 				  {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexGround, normal), sizeof(glm::vec3), NORMAL},
 				  {0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(VertexGround, UV), sizeof(glm::vec2), UV}
 				});
+		
+		VOverlay.init(this, {
+				  {0, sizeof(VertexOverlay), VK_VERTEX_INPUT_RATE_VERTEX}
+			}, {
+			  {0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(VertexOverlay, pos),
+					 sizeof(glm::vec2), OTHER},
+			  {0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(VertexOverlay, UV),
+					 sizeof(glm::vec2), UV}
+			});
 
 		// Pipelines [Shader couples]
 		// The second parameter is the pointer to the vertex definition
@@ -193,6 +218,10 @@ class BarChart : public BaseProject {
 		P_ground.init(this, &VD_ground, "shaders/ShaderVert.spv", "shaders/ShaderFrag.spv", {&DSL_ground, &DSLGubo});
 
 		P_bar.init(this, &VD_bar, "shaders/ShaderBarVert.spv", "shaders/ShaderBarFrag.spv", {&DSL_bar, &DSLGubo});
+
+		POverlay.init(this, &VOverlay, "shaders/OverlayVert.spv", "shaders/OverlayFrag.spv", { &DSLOverlay });
+		POverlay.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+			VK_CULL_MODE_NONE, false);
 
 		// Models, textures and Descriptors (values assigned to the uniforms)
 
@@ -274,8 +303,8 @@ class BarChart : public BaseProject {
 		CamH = 0.0f;
 		targtH = 0.0f;
 		CamRadius = 13.0f;
-		CamPitch = glm::radians(50.f);
-		CamYaw = glm::radians(30.f);
+		CamPitch = 0.53f;
+		CamYaw = 2.7f;
 
 		visualizedValues = (float *)malloc(csv.getNumVariables()*sizeof(float));
 	}
@@ -459,6 +488,10 @@ class BarChart : public BaseProject {
 			CamRadius * cos(CamPitch),
 			1
 		));
+
+		// print campitch and camyaw
+        std::cout << CamPitch << " " << CamYaw << std::endl;
+
 
 
 		glm::mat4 View = glm::lookAt(camPos, camTarget, glm::vec3(0,1,0));
