@@ -212,12 +212,12 @@ class BarChart : public BaseProject {
 		
 		// Creates a mesh with direct enumeration of vertices and indices
 		float start = - csv.getNumVariables()/2.f;
-		float xL = (dx_coordinates - sx_coordinates)*zoom;
-		float zL = (down_coordinates - up_coordinates)*zoom;
+		float xL = (dx_coordinates - sx_coordinates) * zoom;
+		float zL = (up_coordinates - down_coordinates) * zoom;
 		M_ground.vertices = {
 						{{-xL/2,-0.5,-zL/2}, {0.f, -1.f, 0.f}, {0.0f,0.0f}},
-						{{-xL/2,-0.5,zL/2}, {0.f, -1.f, 0.f}, {1.0f,0.0f}},
-					    {{xL/2,-0.5,-zL/2}, {0.f, -1.f, 0.f}, {0.0f,1.0f}},
+						{{-xL/2,-0.5,zL/2}, {0.f, -1.f, 0.f}, {0.0f,1.0f}},
+					    {{xL/2,-0.5,-zL/2}, {0.f, -1.f, 0.f}, {1.0f,0.0f}},
 						{{xL/2,-0.5,zL/2}, {0.f, -1.f, 0.f}, {1.0f,1.0f}}
 		};
 		M_ground.indices = {0, 1, 2, 1, 3, 2};
@@ -557,8 +557,8 @@ int main() {
 
 	bar_coordinates = new coordinates[csv_coordinates.getNumLines()];
 	for (int i = 0; i < csv_coordinates.getNumLines(); i++) {
-		bar_coordinates[i].x = ((std::stof(csv_coordinates.getLine(i)[2]) - up_coordinates - (down_coordinates - up_coordinates) / 2))*zoom;
-		bar_coordinates[i].z = ((std::stof(csv_coordinates.getLine(i)[3]) - sx_coordinates - (dx_coordinates - sx_coordinates) / 2))*zoom;
+		bar_coordinates[i].z = (up_coordinates - (std::stof(csv_coordinates.getLine(i)[2]) - (up_coordinates - down_coordinates) / 2))*zoom;
+		bar_coordinates[i].x = ((std::stof(csv_coordinates.getLine(i)[3]) - sx_coordinates - (dx_coordinates - sx_coordinates) / 2))*zoom;
 		printf("x: %f, z: %f\n", bar_coordinates[i].x, bar_coordinates[i].z);
 	}
 	getchar();
