@@ -3,6 +3,15 @@
 #include "Starter.hpp"
 #include "CSVReader.hpp"
 
+struct coordinates {
+	float x;
+	float z;
+};
+
+struct coordinates * bar_coordinates;
+float up_coordinates = 47.2f, sx_coordinates = 6.0f, dx_coordinates = 19.0f, down_coordinates = 35.0f;
+float zoom = 5.f;
+
 // The uniform buffer objects data structures
 // Remember to use the correct alignas(...) value
 //        float : alignas(4)
@@ -203,11 +212,13 @@ class BarChart : public BaseProject {
 		
 		// Creates a mesh with direct enumeration of vertices and indices
 		float start = - csv.getNumVariables()/2.f;
+		float xL = (dx_coordinates - sx_coordinates)*zoom;
+		float zL = (down_coordinates - up_coordinates)*zoom;
 		M_ground.vertices = {
-						{{start-2,-0.5,-2}, {0.f, -1.f, 0.f}, {0.0f,0.0f}},
-						{{start-2,-0.5,2}, {0.f, -1.f, 0.f}, {0.0f,1.0f}},
-					    {{-start+2,-0.5,-2}, {0.f, -1.f, 0.f}, {1.0f,0.0f}},
-						{{-start+2,-0.5,2}, {0.f, -1.f, 0.f}, {1.0f,1.0f}}
+						{{-xL/2,-0.5,-zL/2}, {0.f, -1.f, 0.f}, {0.0f,0.0f}},
+						{{-xL/2,-0.5,zL/2}, {0.f, -1.f, 0.f}, {1.0f,0.0f}},
+					    {{xL/2,-0.5,-zL/2}, {0.f, -1.f, 0.f}, {0.0f,1.0f}},
+						{{xL/2,-0.5,zL/2}, {0.f, -1.f, 0.f}, {1.0f,1.0f}}
 		};
 		M_ground.indices = {0, 1, 2, 1, 3, 2};
 		M_ground.initMesh(this, &VD_ground);
@@ -215,6 +226,11 @@ class BarChart : public BaseProject {
 		//create parallelepipeds for bars
 		
 		for (int i = 0; i < csv.getNumVariables(); i++) {
+			float left = bar_coordinates[i].x - 0.5;
+			float right = bar_coordinates[i].x + 0.5;
+			float up = bar_coordinates[i].z - 0.5;
+			float down = bar_coordinates[i].z + 0.5;
+
 			//create a parallelepiped of a random color
 			float r = (float)rand() / (float)RAND_MAX;
 			float g = (float)rand() / (float)RAND_MAX;
@@ -222,35 +238,35 @@ class BarChart : public BaseProject {
 			// add the vertices putting position, normal (replicated vertices) and color
 			M_bars[i].vertices = {
 				// bottom face
-				{{start+i,0,-0.5}, {0, -1, 0}, {r,g,b}},
-				{{start+i,0,0.5}, {0, -1, 0}, {r,g,b}},
-				{{start+i+1,0,-0.5}, {0, -1, 0}, {r,g,b}},
-				{{start+i+1,0,0.5}, {0, -1, 0}, {r,g,b}},
+				{{left,0,up}, {0, -1, 0}, {r,g,b}},
+				{{left,0,down}, {0, -1, 0}, {r,g,b}},
+				{{right,0,up}, {0, -1, 0}, {r,g,b}},
+				{{right,0,down}, {0, -1, 0}, {r,g,b}},
 				// top face
-				{{start+i,1,-0.5}, {0, 1, 0}, {r,g,b}},
-				{{start+i,1,0.5}, {0, 1, 0}, {r,g,b}},
-				{{start+i+1,1,-0.5}, {0, 1, 0}, {r,g,b}},
-				{{start+i+1,1,0.5}, {0, 1, 0}, {r,g,b}},
+				{{left,1,up}, {0, 1, 0}, {r,g,b}},
+				{{left,1,down}, {0, 1, 0}, {r,g,b}},
+				{{right,1,up}, {0, 1, 0}, {r,g,b}},
+				{{right,1,down}, {0, 1, 0}, {r,g,b}},
 				// left face
-				{{start+i,0,-0.5}, {-1, 0, 0}, {r,g,b}},
-				{{start+i,0,0.5}, {-1, 0, 0}, {r,g,b}},
-				{{start+i,1,-0.5}, {-1, 0, 0}, {r,g,b}},
-				{{start+i,1,0.5}, {-1, 0, 0}, {r,g,b}},
+				{{left,0,up}, {-1, 0, 0}, {r,g,b}},
+				{{left,0,down}, {-1, 0, 0}, {r,g,b}},
+				{{left,1,up}, {-1, 0, 0}, {r,g,b}},
+				{{left,1,down}, {-1, 0, 0}, {r,g,b}},
 				// right face
-				{{start+i+1,0,-0.5}, {1, 0, 0}, {r,g,b}},
-				{{start+i+1,0,0.5}, {1, 0, 0}, {r,g,b}},
-				{{start+i+1,1,-0.5}, {1, 0, 0}, {r,g,b}},
-				{{start+i+1,1,0.5}, {1, 0, 0}, {r,g,b}},
+				{{right,0,up}, {1, 0, 0}, {r,g,b}},
+				{{right,0,down}, {1, 0, 0}, {r,g,b}},
+				{{right,1,up}, {1, 0, 0}, {r,g,b}},
+				{{right,1,down}, {1, 0, 0}, {r,g,b}},
 				// front face
-				{{start+i,0,0.5}, {0, 0, 1}, {r,g,b}},
-				{{start+i+1,0,0.5}, {0, 0, 1}, {r,g,b}},
-				{{start+i,1,0.5}, {0, 0, 1}, {r,g,b}},
-				{{start+i+1,1,0.5}, {0, 0, 1}, {r,g,b}},
+				{{left,0,down}, {0, 0, 1}, {r,g,b}},
+				{{right,0,down}, {0, 0, 1}, {r,g,b}},
+				{{left,1,down}, {0, 0, 1}, {r,g,b}},
+				{{right,1,down}, {0, 0, 1}, {r,g,b}},
 				// back face
-				{{start+i,0,-0.5}, {0, 0, -1}, {r,g,b}},
-				{{start+i+1,0,-0.5}, {0, 0, -1}, {r,g,b}},
-				{{start+i,1,-0.5}, {0, 0, -1}, {r,g,b}},
-				{{start+i+1,1,-0.5}, {0, 0, -1}, {r,g,b}}
+				{{left,0,up}, {0, 0, -1}, {r,g,b}},
+				{{right,0,up}, {0, 0, -1}, {r,g,b}},
+				{{left,1,up}, {0, 0, -1}, {r,g,b}},
+				{{right,1,up}, {0, 0, -1}, {r,g,b}}
 			};
 
 			// add the indices
@@ -268,7 +284,7 @@ class BarChart : public BaseProject {
 		
 		// Create the textures
 		// The second parameter is the file name
-		T.init(this,   "textures/Checker.png");
+		T.init(this,   "textures/map - up sx 47.2,6.0.png");
 		
 		// Init local variables
 		CamH = 0.0f;
@@ -403,8 +419,10 @@ class BarChart : public BaseProject {
 		glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
 
 		static bool isAutoRotationEnabled = false;
+		static bool wasAutoRotationPressed = false;
+		bool isAutoRotationPressed = false; 
 		
-		getSixAxis(deltaT, m, r, isAutoRotationEnabled);
+		getSixAxis(deltaT, m, r, isAutoRotationPressed);
 		// getSixAxis() is defined in Starter.hpp in the base class.
 		// It fills the float point variable passed in its first parameter with the time
 		// since the last call to the procedure.
@@ -414,7 +432,15 @@ class BarChart : public BaseProject {
 		// to motion (with right stick of the gamepad, or Arrow keys + QE keys on the keyboard, or mouse)
 		// If fills the last boolean variable with true if fire has been pressed:
 		//          SPACE on the keyboard, A or B button on the Gamepad, Right mouse button
-		
+		if(isAutoRotationPressed) {
+			if(!wasAutoRotationPressed) {
+				isAutoRotationEnabled = !isAutoRotationEnabled;
+				wasAutoRotationPressed = true;
+			}
+		} else {
+			wasAutoRotationPressed = false;
+		}
+
 		// Parameters
 		// Camera FOV-y, Near Plane and Far Plane
 		const float FOVy = glm::radians(90.0f);
@@ -422,7 +448,7 @@ class BarChart : public BaseProject {
 		const float farPlane = 100.0f;
 		const float rotSpeed = glm::radians(90.0f);
 		const float movSpeed = 10.0f;
-		const float cameraSpeed = 1.0f;     // Adjust the speed as needed
+		const float cameraSpeed = 0.5f;     // Adjust the speed as needed
 
 		const float minPitch = glm::radians(-30.f);
 		const float maxPitch = glm::radians(89.0f);
@@ -515,7 +541,7 @@ class BarChart : public BaseProject {
 	}
 
 	glm::mat4 getWorldMatrixBar(float height) {
-		height = height * 0.2f;
+		height = height * 0.0001f;
 		glm::mat4 World =  glm::scale(glm::mat4(1), glm::vec3(1.f, height, 1.f));
 		return World;
 	}	
@@ -525,7 +551,18 @@ class BarChart : public BaseProject {
 
 // This is the main: probably you do not need to touch this!
 int main() {
-    CSVReader csv("credit_evolution.csv");
+    CSVReader csv("data/cases_by_region.csv");
+	CSVReader csv_coordinates("data/region_coordinates.csv");
+	
+
+	bar_coordinates = new coordinates[csv_coordinates.getNumLines()];
+	for (int i = 0; i < csv_coordinates.getNumLines(); i++) {
+		bar_coordinates[i].x = ((std::stof(csv_coordinates.getLine(i)[2]) - up_coordinates - (down_coordinates - up_coordinates) / 2))*zoom;
+		bar_coordinates[i].z = ((std::stof(csv_coordinates.getLine(i)[3]) - sx_coordinates - (dx_coordinates - sx_coordinates) / 2))*zoom;
+		printf("x: %f, z: %f\n", bar_coordinates[i].x, bar_coordinates[i].z);
+	}
+	getchar();
+
     BarChart app(csv);
 
     try {

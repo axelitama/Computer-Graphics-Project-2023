@@ -1833,7 +1833,7 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 			m.y = -1.0f;
 		}
 		
-		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_RELEASE) {
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
 			isAutoRotationEnabled = true;
 		}
 
