@@ -1771,7 +1771,7 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 		}
 	}
 		
-	void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r, bool & isAutoRotationEnabled) {
+	void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r, bool &isAutoRotationEnabled) {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		static float lastTime = 0.0f;
 		
@@ -1833,9 +1833,16 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 			m.y = -1.0f;
 		}
 		
-		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-			isAutoRotationEnabled = true;
+		// Define a variable to keep track of the previous state of the 'Q' key
+		static int previousQState = GLFW_RELEASE;
+
+		// Check for key events
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_RELEASE && previousQState == GLFW_PRESS) {
+			isAutoRotationEnabled = !isAutoRotationEnabled; // Toggle the flag
 		}
+
+		// Update the previousQState variable for the next frame
+		previousQState = glfwGetKey(window, GLFW_KEY_Q);
 
 		
 	}
