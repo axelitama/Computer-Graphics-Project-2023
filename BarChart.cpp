@@ -531,7 +531,9 @@ class BarChart : public BaseProject {
 		DSGubo.map(currentImage, &gubo, sizeof(gubo), 0);
 
 
-		glm::mat4 World = glm::mat4(1);		
+		//glm::mat4 World = glm::mat4(1);		
+		glm::mat4 World = glm::translate(glm::mat4(1.0), glm::vec3(0.0f, 0.5f, 0.0f)) * glm::scale(glm::mat4(1.0), glm::vec3(1.05f, 1.0f, 0.97f));
+
 
 		ubo_ground.mvpMat = Prj * View * World;
 		DS_ground.map(currentImage, &ubo_ground, sizeof(ubo_ground), 0);
@@ -590,8 +592,8 @@ int main() {
 
 	bar_coordinates = new coordinates[csv_coordinates.getNumLines()];
 	for (int i = 0; i < csv_coordinates.getNumLines(); i++) {
-		bar_coordinates[i].z = (up_coordinates - (std::stof(csv_coordinates.getLine(i)[2]) - (up_coordinates - down_coordinates) / 2))*zoom;
-		bar_coordinates[i].x = ((std::stof(csv_coordinates.getLine(i)[3]) - sx_coordinates - (dx_coordinates - sx_coordinates) / 2))*zoom;
+		bar_coordinates[i].z = zoom*(up_coordinates - (std::stof(csv_coordinates.getLine(i)[2]) + (up_coordinates - down_coordinates) / 2)) + 2.5f;
+		bar_coordinates[i].x = zoom*((std::stof(csv_coordinates.getLine(i)[3]) - sx_coordinates - (dx_coordinates - sx_coordinates) / 2));
 		printf("x: %f, z: %f\n", bar_coordinates[i].x, bar_coordinates[i].z);
 	}
 	getchar();
