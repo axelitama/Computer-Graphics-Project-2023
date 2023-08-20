@@ -255,10 +255,10 @@ class BarChart : public BaseProject {
 		//create parallelepipeds for bars
 		
 		for (int i = 0; i < csv.getNumVariables(); i++) {
-			float left = bar_coordinates[i].x - 0.5;
-			float right = bar_coordinates[i].x + 0.5;
-			float up = bar_coordinates[i].z - 0.5;
-			float down = bar_coordinates[i].z + 0.5;
+			float left = bar_coordinates[i].x - 0.8;
+			float right = bar_coordinates[i].x + 0.8;
+			float up = bar_coordinates[i].z - 0.8;
+			float down = bar_coordinates[i].z + 0.8;
 
 			//create a parallelepiped of a random color
 			float r = (float)rand() / (float)RAND_MAX;
@@ -450,8 +450,12 @@ class BarChart : public BaseProject {
 		static bool isAutoRotationEnabled = false;
 		static bool wasAutoRotationPressed = false;
 		bool isAutoRotationPressed = false; 
+
+		static bool isPauseEnabled = true;
+		static bool wasPausePressed = false;
+		bool isPausePressed = false;
 		
-		getSixAxis(deltaT, m, r, isAutoRotationPressed);
+		getSixAxis(deltaT, m, r, isAutoRotationPressed, isPausePressed);
 		// getSixAxis() is defined in Starter.hpp in the base class.
 		// It fills the float point variable passed in its first parameter with the time
 		// since the last call to the procedure.
@@ -468,6 +472,16 @@ class BarChart : public BaseProject {
 			}
 		} else {
 			wasAutoRotationPressed = false;
+		}
+
+		if (isPausePressed) {
+			if (!wasPausePressed) {
+				isPauseEnabled = !isPauseEnabled;
+				wasPausePressed = true;
+			}
+		}
+		else {
+			wasPausePressed = false;
 		}
 
 		// Parameters
@@ -532,7 +546,7 @@ class BarChart : public BaseProject {
 
 
 		//glm::mat4 World = glm::mat4(1);		
-		glm::mat4 World = glm::translate(glm::mat4(1.0), glm::vec3(0.0f, 0.5f, 0.0f)) * glm::scale(glm::mat4(1.0), glm::vec3(1.05f, 1.0f, 0.97f));
+		glm::mat4 World = glm::translate(glm::mat4(1.0), glm::vec3(0.0f, 0.4f, 0.0f)) * glm::scale(glm::mat4(1.0), glm::vec3(1.05f, 1.0f, 0.97f));
 
 
 		ubo_ground.mvpMat = Prj * View * World;
@@ -548,19 +562,27 @@ class BarChart : public BaseProject {
 
 		float valueTime = 0.1f;
 
+
 		for (int i = 0; i < csv.getNumVariables(); i++) {
 			float prevValue = line==0?0:std::stof(csv.getLine(line-1)[i]);
 			float value = std::stof(csv.getLine(line)[i]);
 
-			visualizedValues[i] = prevValue +
+			if (!isPauseEnabled){
+				visualizedValues[i] = prevValue +
 				(value - prevValue) * (animationTime / valueTime);
+			}
+			else
+			{
+				visualizedValues[i] = prevValue;
+			}
 		}
 		
 		
 		// every valueTime seconds, we change the line of the csv file to be read and therefore update the bars
 		if(time >= valueTime) {
 			time = 0;
-			line++;
+			if(!isPauseEnabled)
+				line++;
 			animationTime = 0;
 			if(line >= csv.getNumLines())
 				line = 0; //qua potremmo mostrare un messaggio sull'overlay che dice premi "tasto" per ricominciare
