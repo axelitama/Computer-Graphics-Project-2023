@@ -60,9 +60,9 @@ struct VertexOverlay {
 class BarChart : public BaseProject {
 	public:
 	BarChart(const CSVReader& csv) : BaseProject(), csv(csv) {
-		M_bars = new Model<VertexBar>[csv.getNumVariables()];
-		DS_bars = new DescriptorSet[csv.getNumVariables()];
-		ubo_bars = new UniformBlock[csv.getNumVariables()];
+		M_bars = new Model<VertexBar>[csv.getNumVariables()-1];
+		DS_bars = new DescriptorSet[csv.getNumVariables()-1];
+		ubo_bars = new UniformBlock[csv.getNumVariables()-1];
 	}
 
 	~BarChart() {
@@ -240,7 +240,7 @@ class BarChart : public BaseProject {
 		// The last is a constant specifying the file type: currently only OBJ or GLTF
 		
 		// Creates a mesh with direct enumeration of vertices and indices
-		float start = - csv.getNumVariables()/2.f;
+		float start = - (csv.getNumVariables()-1)/2.f;
 		float xL = (dx_coordinates - sx_coordinates) * zoom;
 		float zL = (up_coordinates - down_coordinates) * zoom;
 		M_ground.vertices = {
@@ -322,7 +322,7 @@ class BarChart : public BaseProject {
 		CamPitch = 0.53f;
 		CamYaw = 2.7f;
 
-		visualizedValues = (float *)malloc(csv.getNumVariables()*sizeof(float));
+		visualizedValues = (float *)malloc((csv.getNumVariables()-1)*sizeof(float));
 	}
 	
 	// Here you create your pipelines and Descriptor Sets!
@@ -347,7 +347,7 @@ class BarChart : public BaseProject {
 		
 
 		P_bar.create();
-		for (int i = 0; i < csv.getNumVariables(); i++) {
+		for (int i = 0; i < csv.getNumVariables()-1; i++) {
 			DS_bars[i].init(this, &DSL_bar, {
 					{0, UNIFORM, sizeof(UniformBlock), nullptr}
 				});
@@ -364,7 +364,7 @@ class BarChart : public BaseProject {
 		DS_ground.cleanup();
 
 		P_bar.cleanup();
-		for (int i = 0; i < csv.getNumVariables(); i++) {
+		for (int i = 0; i < csv.getNumVariables()-1; i++) {
 			DS_bars[i].cleanup();
 		}
 		DSGubo.cleanup();
@@ -380,7 +380,7 @@ class BarChart : public BaseProject {
 		
 		// Cleanup models
 		M_ground.cleanup();
-		for (int i = 0; i < csv.getNumVariables(); i++) {
+		for (int i = 0; i < csv.getNumVariables()-1; i++) {
 			M_bars[i].cleanup();
 		}	
 		
@@ -426,7 +426,7 @@ class BarChart : public BaseProject {
 
 
 		P_bar.bind(commandBuffer);
-		for (int i = 0; i < csv.getNumVariables(); i++) {
+		for (int i = 0; i < csv.getNumVariables()-1; i++) {
 			DS_bars[i].bind(commandBuffer, P_bar, 0, currentImage);
 			M_bars[i].bind(commandBuffer);
 			vkCmdDrawIndexed(commandBuffer,
@@ -562,10 +562,9 @@ class BarChart : public BaseProject {
 
 		float valueTime = 0.1f;
 
-
-		for (int i = 0; i < csv.getNumVariables(); i++) {
-			float prevValue = line==0?0:std::stof(csv.getLine(line-1)[i]);
-			float value = std::stof(csv.getLine(line)[i]);
+		for (int i = 0; i < csv.getNumVariables()-1; i++) {
+			float prevValue = line==0?0:std::stof(csv.getLine(line-1)[i+1]);
+			float value = std::stof(csv.getLine(line)[i+1]);
 
 			if (!isPauseEnabled){
 				visualizedValues[i] = prevValue +
@@ -588,7 +587,7 @@ class BarChart : public BaseProject {
 				line = 0; //qua potremmo mostrare un messaggio sull'overlay che dice premi "tasto" per ricominciare
 		}
 
-		for (int i = 0; i < csv.getNumVariables(); i++) {
+		for (int i = 0; i < csv.getNumVariables()-1; i++) {
 			World = getWorldMatrixBar(visualizedValues[i]);
 			ubo_bars[i].mvpMat = Prj * View * World;
 			DS_bars[i].map(currentImage, &ubo_bars[i], sizeof(ubo_bars[i]), 0);
