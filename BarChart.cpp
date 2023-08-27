@@ -454,8 +454,12 @@ class BarChart : public BaseProject {
 		static bool isAutoRotationEnabled = false;
 		static bool wasAutoRotationPressed = false;
 		bool isAutoRotationPressed = false; 
+
+		static bool isPauseEnabled = true;
+		static bool wasPausePressed = false;
+		bool isPausePressed = false;
 		
-		getSixAxis(deltaT, m, r, isAutoRotationPressed);
+		getSixAxis(deltaT, m, r, isAutoRotationPressed, isPausePressed);
 		// getSixAxis() is defined in Starter.hpp in the base class.
 		// It fills the float point variable passed in its first parameter with the time
 		// since the last call to the procedure.
@@ -472,6 +476,16 @@ class BarChart : public BaseProject {
 			}
 		} else {
 			wasAutoRotationPressed = false;
+		}
+
+		if (isPausePressed) {
+			if (!wasPausePressed) {
+				isPauseEnabled = !isPauseEnabled;
+				wasPausePressed = true;
+			}
+		}
+		else {
+			wasPausePressed = false;
 		}
 
 		// Parameters
@@ -556,15 +570,22 @@ class BarChart : public BaseProject {
 			float prevValue = line==0?0:std::stof(csv.getLine(line-1)[i+1]);
 			float value = std::stof(csv.getLine(line)[i+1]);
 
-			visualizedValues[i] = prevValue +
+			if (!isPauseEnabled){
+				visualizedValues[i] = prevValue +
 				(value - prevValue) * (animationTime / valueTime);
+			}
+			else
+			{
+				visualizedValues[i] = prevValue;
+			}
 		}
 		
 		
 		// every valueTime seconds, we change the line of the csv file to be read and therefore update the bars
 		if(time >= valueTime) {
 			time = 0;
-			line++;
+			if(!isPauseEnabled)
+				line++;
 			animationTime = 0;
 			if(line >= csv.getNumLines())
 				line = 0; //qua potremmo mostrare un messaggio sull'overlay che dice premi "tasto" per ricominciare
