@@ -1,11 +1,13 @@
 CXX=g++
+CC=gcc
 CXXFLAGS=-Iheaders
+CFLAGS=$(CXXFLAGS)
 LDFLAGS=-lglfw -lvulkan
 SRCDIR=.
 OBJDIR=bin/obj
 BINDIR=bin
-SOURCES=BarChart.cpp CSVReader.cpp
-OBJECTS=$(patsubst %.cpp,$(OBJDIR)/%.o,$(SOURCES))
+SOURCES=BarChart.cpp CSVReader.cpp mercator.c
+OBJECTS=$(patsubst %.c,$(OBJDIR)/%.o,$(filter %.c,$(SOURCES))) $(patsubst %.cpp,$(OBJDIR)/%.o,$(filter %.cpp,$(SOURCES)))
 EXECUTABLE=$(BINDIR)/exec.out
 
 all:
@@ -20,6 +22,10 @@ $(EXECUTABLE): $(OBJECTS)
 $(OBJDIR)/%.o: %.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 SHADERSDIR=shaders
 SHADERS=$(wildcard $(SHADERSDIR)/*.vert) $(wildcard $(SHADERSDIR)/*.frag)
