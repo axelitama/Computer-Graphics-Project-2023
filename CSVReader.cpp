@@ -1,5 +1,8 @@
 #include "CSVReader.hpp"
 
+#include <fstream>
+#include <sstream>
+
 CSVReader::CSVReader(std::string filename, char delimiter) {
     this->filename = filename;
     this->delimiter = delimiter;
