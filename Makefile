@@ -1,7 +1,7 @@
 CXX=g++
 CC=gcc
 CXXFLAGS=-Iheaders
-CFLAGS=$(CXXFLAGS)
+CFLAGS=
 LDFLAGS=-lglfw -lvulkan
 SRCDIR=.
 OBJDIR=bin/obj
