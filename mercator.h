@@ -1,6 +1,11 @@
 #ifndef MERCATOR_H
 #define MERCATOR_H
 
+struct coordinates {
+	float x;
+	float z;
+};
+
 extern const double EARTH_RADIUS;
 
 double degreeLatitudeToY(double latitude);
