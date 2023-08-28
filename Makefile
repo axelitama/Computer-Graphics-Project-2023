@@ -12,10 +12,22 @@ OBJECTS=$(patsubst %.c,$(OBJDIR)/%.o,$(filter %.c,$(SOURCES))) $(patsubst %.cpp,
 DEPENDENCIES=$(patsubst %.c,$(DEPDIR)/%.d,$(filter %.c,$(SOURCES))) $(patsubst %.cpp,$(DEPDIR)/%.d,$(filter %.cpp,$(SOURCES)))
 EXECUTABLE=$(BINDIR)/exec.out
 
-all: shaders dependencies executable
+all: shaders executable
+
+# NOTE: dependencies are not recomputed when a header file is modified. Consequently, if a new header is included within another header,
+#       it's necessary to execute the "make clean" command before compiling in order to ensure accurate dependency tracking.
+
+dependencies: $(DEPENDENCIES)
+
+$(DEPDIR)/%.d: %.cpp
+	mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -MM -MP -MT $(OBJDIR)/$(notdir $*).o $< -MF $@
+
+$(DEPDIR)/%.d: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -MM -MP -MT $(OBJDIR)/$(notdir $*).o $< -MF $@
 
 executable: $(EXECUTABLE)
-	rm -f $(DEPENDENCIES)
 
 $(EXECUTABLE): $(OBJECTS) | dependencies
 	mkdir -p $(dir $@)
@@ -47,16 +59,6 @@ $(SHADERSDIR)/%Vert.spv: $(SHADERSDIR)/%.vert
 
 $(SHADERSDIR)/%Frag.spv: $(SHADERSDIR)/%.frag
 	glslc $< -o $@
-
-dependencies: $(DEPENDENCIES)
-
-$(DEPDIR)/%.d: %.cpp
-	mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -MM -MP -MT $(OBJDIR)/$(notdir $*).o $< -MF $@
-
-$(DEPDIR)/%.d: %.c
-	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -MM -MP -MT $(OBJDIR)/$(notdir $*).o $< -MF $@
 
 clean:
 	rm -f $(OBJECTS) $(EXECUTABLE) $(SHADERSPV) $(DEPENDENCIES)
