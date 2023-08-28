@@ -103,22 +103,10 @@ class BarChart : public BaseProject {
 };
 
 /**************************************************
-*****   TODO: Following code should have been in BarChart.cpp but that will cause multiple definition problem
-*****   because Starter.hpp contains definitions
+*****   NOTE: Following code should have been in BarChart.cpp but that will cause multiple definition problem
+*****         because Starter.hpp contains definitions
 **************************************************/
 
-// This has been adapted from the Vulkan tutorial
-// The uniform buffer objects data structures
-// Remember to use the correct alignas(...) value
-//        float : alignas(4)
-//        vec2  : alignas(8)
-//        vec3  : alignas(16)
-//        vec4  : alignas(16)
-//        mat3  : alignas(16)
-//        mat4  : alignas(16)
-// Example:
-
-// MAIN ! 
 BarChart::BarChart(const CSVReader& csv) : BaseProject(), csv(csv) {
     name = "Bar Chart";
     M_bars = new Model<VertexColour>[csv.getNumVariables()-1];

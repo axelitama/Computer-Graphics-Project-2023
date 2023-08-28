@@ -4,14 +4,10 @@
 #include "BarChart.hpp"
 #include "CSVReader.hpp"
 
-extern const float up_coordinates, sx_coordinates, dx_coordinates, down_coordinates,
-	zoom;
-extern struct coordinates * bar_coordinates;
-
 class BarChartMap : public BarChart {
     public:
 
-        BarChartMap(const CSVReader& csv);
+        BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates, float up, float sx, float dx, float down, const float zoom);
 
     protected:
 
@@ -29,6 +25,10 @@ class BarChartMap : public BarChart {
 		// Textures
 		Texture T;
 
+        struct coordinates * bar_coordinates;
+        float zoom;
+        float latDim, lonDim;
+
         void localInit() override;
 
         void pipelinesAndDescriptorSetsInit() override;
@@ -39,29 +39,35 @@ class BarChartMap : public BarChart {
 };
 
 /**************************************************
-*****   TODO: Following code should have been in BarChartMap.cpp but that will cause multiple definition problem
-*****   because Starter.hpp contains definitions
+*****   NOTE: Following code should have been in BarChartMap.cpp but that will cause multiple definition problem
+*****         because Starter.hpp contains definitions
 **************************************************/
 
 extern "C" {
 	#include "mercator.h"
 }
 
-const float up_coordinates = degreeLatitudeToY(47.5f), sx_coordinates = degreeLongitudeToX(5.f), dx_coordinates = degreeLongitudeToX(20.f), down_coordinates = degreeLatitudeToY(34.5f),
-    zoom = 0.00002f;
-coordinates * bar_coordinates;
 
-// The uniform buffer objects data structures
-// Remember to use the correct alignas(...) value
-//        float : alignas(4)
-//        vec2  : alignas(8)
-//        vec3  : alignas(16)
-//        vec4  : alignas(16)
-//        mat3  : alignas(16)
-//        mat4  : alignas(16)
-// Example:
+BarChartMap::BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates, float up, float sx, float dx, float down, const float zoom) : BarChart(csv){
+    up = degreeLatitudeToY(up);
+    sx = degreeLongitudeToX(sx);
+    dx = degreeLongitudeToX(dx);
+    down = degreeLatitudeToY(down);
 
-BarChartMap::BarChartMap(const CSVReader& csv) : BarChart(csv){
+    this->latDim = up - down;
+    this->lonDim = dx - sx;
+    this->zoom = zoom;
+
+    bar_coordinates = new coordinates[csv_coordinates.getNumLines()];
+
+	for (int i = 0; i < csv_coordinates.getNumLines(); i++) {
+		// Converting latitude and longitude to mercator cartesian coordinates	
+		bar_coordinates[i].x = degreeLatitudeToY(std::stof(csv_coordinates.getLine(i)[2]));
+		bar_coordinates[i].z = degreeLongitudeToX(std::stof(csv_coordinates.getLine(i)[3]));
+		// Scaling and translating the coordinates
+		bar_coordinates[i].z = -zoom * (bar_coordinates[i].z - sx - (dx - sx) / 2.f);
+		bar_coordinates[i].x = zoom * (up - bar_coordinates[i].x - (up - down) / 2.f);
+    }
 }
 	
 // Here you load and setup all your Vulkan Models and Texutures.
@@ -162,9 +168,8 @@ void BarChartMap::localInit() {
     // The last is a constant specifying the file type: currently only OBJ or GLTF
     
     // Creates a mesh with direct enumeration of vertices and indices
-    float start = - (csv.getNumVariables()-1)/2.f;
-    float xL = (up_coordinates - down_coordinates) * zoom;
-    float zL = (dx_coordinates - sx_coordinates) * zoom;
+    float xL = latDim * zoom;
+    float zL = lonDim * zoom;
     M_ground.vertices = {
                     {{-xL/2,-0.1,-zL/2}, {0.f, 1.f, 0.f}, {1.0f,0.0f}},
                     {{-xL/2,-0.1,zL/2}, {0.f, 1.f, 0.f}, {0.0f,0.0f}},
