@@ -281,7 +281,7 @@ void BarChartMap::pipelinesAndDescriptorSetsInit() {
     }
 }
 
-// NEED THIS BECAUSE PARENT WILL TRY TO USE PARENT M_GROUND
+/// NOTE: need this because parent will try to use parent M_ground
 void BarChartMap::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
     DSGubo.bind(commandBuffer, P_bar, 1, currentImage);
     // binds the pipeline
@@ -324,7 +324,21 @@ void BarChartMap::populateCommandBuffer(VkCommandBuffer commandBuffer, int curre
 // You also have to destroy the pipelines: since they need to be rebuilt, they have two different
 // methods: .cleanup() recreates them, while .destroy() delete them completely
 void BarChartMap::localCleanup() {
-    BarChart::localCleanup();
+    /// NOTE: can't call parent's cleanup because it will try to use parent's M_ground
+    // Cleanup models
+    M_ground.cleanup();
+    for (int i = 0; i < csv.getNumVariables()-1; i++) {
+        M_bars[i].cleanup();
+    }	
+    
+    // Cleanup descriptor set layouts
+    DSL_ground.cleanup();
+    DSL_bar.cleanup();
+    DSLGubo.cleanup();
+    
+    // Destroies the pipelines
+    P_ground.destroy();
+    P_bar.destroy();
     // Cleanup textures
     T.cleanup();
 }
