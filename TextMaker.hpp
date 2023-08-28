@@ -232,11 +232,10 @@ struct TextMaker {
 			
 	}
 
-	void update(uint32_t currentImage, float Ar){
-		// ubo_txt.mvpMat = glm::ortho(0.0f, Ar, 0.0f, 1.0f);
-
-
-		ubo_txt.mvpMat = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+	void update(uint32_t currentImage, int h, int w){
+		ubo_txt.mvpMat = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, -1.0f, -1.0f))*
+			glm::scale(glm::mat4(1.0f), glm::vec3(800.0f/w, 600.0f/h, 1.0f))*
+			glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
 		DS.map(currentImage, &ubo_txt, sizeof(ubo_txt), 0);
 	}

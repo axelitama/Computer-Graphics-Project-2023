@@ -6,9 +6,7 @@
 #include "TextMaker.hpp"
 
 std::vector<SingleText> demoText = {
-    {1, {"Direct Light", "", "", ""}, 0, 0},
-    {1, {"Point Light", "", "", ""}, 0, 0},
-    {1, {"Spot Light", "", "", ""}, 0, 0},
+    {1, {"Very nice data", "", "", ""}, 0, 0},
 };
 
 class BarChart : public BaseProject {
@@ -144,6 +142,8 @@ BarChart::~BarChart() {
 }
 
 
+int height;
+int width;
 // Here you set the main application parameters
 void BarChart::setWindowParameters() {
     // window size, titile and initial background
@@ -159,11 +159,16 @@ void BarChart::setWindowParameters() {
     setsInPool = 200;
     
     Ar = (float)windowWidth / (float)windowHeight;
+    height = windowHeight;
+    width = windowWidth;    
 }
 	
 // What to do when the window changes size
+
 void BarChart::onWindowResize(int w, int h) {
     Ar = (float)w / (float)h;
+    height = h;
+    width = w;
 }
 	
 // Here you load and setup all your Vulkan Models and Texutures.
@@ -615,7 +620,7 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
     printf("\ntime: %f\nline: %d\n", time, line);
     printf("cam pitch: %f\ncam yaw: %f\n", CamPitch, CamYaw);
 
-	txt.update(currentImage, Ar);
+	txt.update(currentImage, height, width);
 }
 
 glm::mat4 BarChart::getWorldMatrixBar(float height) {
