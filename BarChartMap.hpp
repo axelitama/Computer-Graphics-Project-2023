@@ -241,6 +241,7 @@ void BarChartMap::localInit() {
     // Create the textures
     // The second parameter is the file name
     T.init(this,   "textures/map-47.5-20-34.5-5.png");
+	txt.init(this, &demoText);
     
     // Init local variables
     CamH = 0.0f;
@@ -279,6 +280,7 @@ void BarChartMap::pipelinesAndDescriptorSetsInit() {
                 {0, UNIFORM, sizeof(UniformBlock), nullptr}
             });
     }
+    txt.pipelinesAndDescriptorSetsInit();
 }
 
 /// NOTE: need this because parent will try to use parent M_ground
@@ -315,7 +317,9 @@ void BarChartMap::populateCommandBuffer(VkCommandBuffer commandBuffer, int curre
         M_bars[i].bind(commandBuffer);
         vkCmdDrawIndexed(commandBuffer,
                 static_cast<uint32_t>(M_bars[i].indices.size()), 1, 0, 0, 0);
-    }
+    }   
+    txt.populateCommandBuffer(commandBuffer, currentImage, 0);
+
 
 }
 
@@ -341,6 +345,7 @@ void BarChartMap::localCleanup() {
     P_bar.destroy();
     // Cleanup textures
     T.cleanup();
+	txt.localCleanup();
 }
 
 

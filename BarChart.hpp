@@ -3,6 +3,13 @@
 
 #include "Starter.hpp"
 #include "CSVReader.hpp"
+#include "TextMaker.hpp"
+
+std::vector<SingleText> demoText = {
+    {1, {"Direct Light", "", "", ""}, 0, 0},
+    {1, {"Point Light", "", "", ""}, 0, 0},
+    {1, {"Spot Light", "", "", ""}, 0, 0},
+};
 
 class BarChart : public BaseProject {
     public:
@@ -80,6 +87,9 @@ class BarChart : public BaseProject {
         GlobalUniformBlock gubo;
         OverlayUniformBlock uboOverlay;
 
+
+	    TextMaker txt;
+
         // Other application parameters
         float CamH, CamRadius, CamPitch, CamYaw, targtH;
 
@@ -103,10 +113,22 @@ class BarChart : public BaseProject {
 };
 
 /**************************************************
-*****   NOTE: Following code should have been in BarChart.cpp but that will cause multiple definition problem
-*****         because Starter.hpp contains definitions
+*****   TODO: Following code should have been in BarChart.cpp but that will cause multiple definition problem
+*****   because Starter.hpp contains definitions
 **************************************************/
 
+// This has been adapted from the Vulkan tutorial
+// The uniform buffer objects data structures
+// Remember to use the correct alignas(...) value
+//        float : alignas(4)
+//        vec2  : alignas(8)
+//        vec3  : alignas(16)
+//        vec4  : alignas(16)
+//        mat3  : alignas(16)
+//        mat4  : alignas(16)
+// Example:
+
+// MAIN ! 
 BarChart::BarChart(const CSVReader& csv) : BaseProject(), csv(csv) {
     name = "Bar Chart";
     M_bars = new Model<VertexColour>[csv.getNumVariables()-1];
@@ -304,6 +326,7 @@ void BarChart::localInit() {
         M_bars[i].initMesh(this, &VD_bar);
     }
 
+	txt.init(this, &demoText);
     
     // Create the textures
     // The second parameter is the file name
@@ -344,6 +367,8 @@ void BarChart::pipelinesAndDescriptorSetsInit() {
                 {0, UNIFORM, sizeof(UniformBlock), nullptr}
             });
     }
+	
+    txt.pipelinesAndDescriptorSetsInit();
 }
 
 // Here you destroy your pipelines and Descriptor Sets!
@@ -360,6 +385,8 @@ void BarChart::pipelinesAndDescriptorSetsCleanup() {
         DS_bars[i].cleanup();
     }
     DSGubo.cleanup();
+
+	txt.pipelinesAndDescriptorSetsCleanup();
 }
 
 // Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -383,6 +410,8 @@ void BarChart::localCleanup() {
     // Destroies the pipelines
     P_ground.destroy();
     P_bar.destroy();
+
+	txt.localCleanup();
 }
 	
 // Here it is the creation of the command buffer:
@@ -422,6 +451,8 @@ void BarChart::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentI
         vkCmdDrawIndexed(commandBuffer,
                 static_cast<uint32_t>(M_bars[i].indices.size()), 1, 0, 0, 0);
     }
+		
+    txt.populateCommandBuffer(commandBuffer, currentImage, 0);
 }
 
 // Here is where you update the uniforms.
@@ -583,6 +614,8 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
     }
     printf("\ntime: %f\nline: %d\n", time, line);
     printf("cam pitch: %f\ncam yaw: %f\n", CamPitch, CamYaw);
+
+	txt.update(currentImage, Ar);
 }
 
 glm::mat4 BarChart::getWorldMatrixBar(float height) {
