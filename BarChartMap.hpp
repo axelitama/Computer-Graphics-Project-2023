@@ -179,63 +179,72 @@ void BarChartMap::localInit() {
     M_ground.indices = {0, 1, 2, 1, 3, 2};
     M_ground.initMesh(this, &VD_ground);
 
-    //create parallelepipeds for bars
-    
+    //create cilinders for bars
+    ///------------------------------------------------------
     for (int i = 0; i < csv.getNumVariables()-1; i++) {
-        float west = bar_coordinates[i].z - 0.5;
-        float east = bar_coordinates[i].z + 0.5;
-        float north = bar_coordinates[i].x - 0.5;
-        float south = bar_coordinates[i].x + 0.5;
-
         //create a parallelepiped of a random color
         float r = (float)rand() / (float)RAND_MAX;
         float g = (float)rand() / (float)RAND_MAX;
         float b = (float)rand() / (float)RAND_MAX;
-        // add the vertices putting position, normal (replicated vertices) and color
-        M_bars[i].vertices = {
-            // bottom face				
-            {{south,0,west}, {0, -1, 0}, {r,g,b}},
-            {{south,0,east}, {0, -1, 0}, {r,g,b}},
-            {{north,0,west}, {0, -1, 0}, {r,g,b}},
-            {{north,0,east}, {0, -1, 0}, {r,g,b}},
-            // top face
-            {{south,1,west}, {0, 1, 0}, {r,g,b}},
-            {{south,1,east}, {0, 1, 0}, {r,g,b}},
-            {{north,1,west}, {0, 1, 0}, {r,g,b}},
-            {{north,1,east}, {0, 1, 0}, {r,g,b}},
-            // south face
-            {{south,0,west}, {-1, 0, 0}, {r,g,b}},
-            {{south,0,east}, {-1, 0, 0}, {r,g,b}},
-            {{south,1,west}, {-1, 0, 0}, {r,g,b}},
-            {{south,1,east}, {-1, 0, 0}, {r,g,b}},
-            // north face
-            {{north,0,west}, {1, 0, 0}, {r,g,b}},
-            {{north,0,east}, {1, 0, 0}, {r,g,b}},
-            {{north,1,west}, {1, 0, 0}, {r,g,b}},
-            {{north,1,east}, {1, 0, 0}, {r,g,b}},
-            // front face
-            {{south,0,east}, {0, 0, 1}, {r,g,b}},
-            {{north,0,east}, {0, 0, 1}, {r,g,b}},
-            {{south,1,east}, {0, 0, 1}, {r,g,b}},
-            {{north,1,east}, {0, 0, 1}, {r,g,b}},
-            // back face
-            {{south,0,west}, {0, 0, -1}, {r,g,b}},
-            {{north,0,west}, {0, 0, -1}, {r,g,b}},
-            {{south,1,west}, {0, 0, -1}, {r,g,b}},
-            {{north,1,west}, {0, 0, -1}, {r,g,b}}
-        };
 
-        // add the indices
-        M_bars[i].indices = {
-            0, 1, 2, 1, 3, 2, // bottom
-            4, 5, 6, 5, 7, 6, // top
-            8, 9, 10, 9, 11, 10, // left
-            12, 13, 14, 13, 15, 14, // right
-            16, 17, 18, 17, 19, 18, // front
-            20, 21, 22, 21, 23, 22 // back
-        };
+        glm::vec3 colour = glm::vec3{r, g, b};
+
+        int nv1 = 100, nv2 = 100;
+        float x, y, z;
+        glm::vec3 normal;
+
+        // Set cylinder position and height parameters
+        glm::vec3 cylinderPosition = glm::vec3(bar_coordinates[i].x, 0.0f, bar_coordinates[i].z);  // Adjust the position
+        float cylinderHeight = 1.0f;  // Adjust the height
+        float cylinderRadius = 0.5f;
+
+        for (int j = 0; j < nv1; j++) {
+            for (int k = 0; k < nv2; k++) {
+                x = cylinderRadius * cos(2 * M_PI * j/ (nv1 - 1)) + cylinderPosition.x;
+                y = cylinderPosition.y + cylinderHeight * k / (nv2 - 1);
+                z = cylinderRadius * sin(2 * M_PI * j/ (nv1 - 1)) + cylinderPosition.z;
+
+                // compute the normal vector
+                normal = glm::normalize(glm::vec3{x - cylinderPosition.x, 0, z - cylinderPosition.z});
+
+                // add the position and the normal vector of the vertex to the array M_bars[i].vertices
+                M_bars[i].vertices.push_back({{x, y, z}, normal, colour});  // vertex j*nv+k - Position and Normal
+            }
+        }
+
+        // push the center of the top and bottom faces
+        M_bars[i].vertices.push_back({{cylinderPosition.x, cylinderPosition.y, cylinderPosition.z}, glm::vec3{0, -1, 0}, colour});
+        M_bars[i].vertices.push_back({{cylinderPosition.x, cylinderPosition.y + cylinderHeight, cylinderPosition.z}, glm::vec3{0, 1, 0}, colour});
+
+        // push the other vertices of the top and bottom faces
+        for (int j = 0; j < nv1; j++) {
+            x = cylinderRadius * cos(2 * M_PI * j / (nv1 - 1)) + cylinderPosition.x;
+            z = cylinderRadius * sin(2 * M_PI * j / (nv1 - 1)) + cylinderPosition.z;
+
+            // add the position and the normal vector of the vertex to the array M_bars[i].vertices
+            M_bars[i].vertices.push_back({{x, cylinderPosition.y, z}, glm::vec3{0, -1, 0}, colour});
+            M_bars[i].vertices.push_back({{x, cylinderPosition.y + cylinderHeight, z}, glm::vec3{0, 1, 0}, colour});
+        }
+        
+        // Fill the array M_bars[i].indices with the indices of the vertices of the triangles
+        for (int j = 0; j < nv1 - 1; j++) {
+            for (int k = 0; k < nv2 - 1; k++) {
+                M_bars[i].indices.push_back(j * nv2 + k); M_bars[i].indices.push_back(j * nv2 + k + 1); M_bars[i].indices.push_back((j + 1) * nv2 + k);
+                M_bars[i].indices.push_back(j * nv2 + k + 1); M_bars[i].indices.push_back((j + 1) * nv2 + k + 1); M_bars[i].indices.push_back((j + 1) * nv2 + k);
+            }
+        }
+
+        // push the triengles of the top and bottom circles
+        for (int j = 0; j < nv1 - 1; j++) {
+            M_bars[i].indices.push_back(nv1 * nv2); M_bars[i].indices.push_back(nv1 * nv2 + 2 * j + 2); M_bars[i].indices.push_back(nv1 * nv2 + 2 * j + 4);
+            M_bars[i].indices.push_back(nv1 * nv2 + 1); M_bars[i].indices.push_back(nv1 * nv2 + 2 * j + 3); M_bars[i].indices.push_back(nv1 * nv2 + 2 * j + 5);
+        }
+        M_bars[i].indices.push_back(nv1 * nv2); M_bars[i].indices.push_back(nv1 * nv2 + 2 * nv1); M_bars[i].indices.push_back(nv1 * nv2 + 2);
+        M_bars[i].indices.push_back(nv1 * nv2 + 1); M_bars[i].indices.push_back(nv1 * nv2 + 2 * nv1 + 1); M_bars[i].indices.push_back(nv1 * nv2 + 3);
+
         M_bars[i].initMesh(this, &VD_bar);
     }
+//----------------------------------------------------------
 
     
     // Create the textures
