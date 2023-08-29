@@ -29,21 +29,12 @@ class BarChart : public BaseProject {
             alignas(16) glm::vec3 eyePos;
         };
 
-        struct OverlayUniformBlock {
-            alignas(4) float visible;
-        };
 
         struct VertexColour {
             glm::vec3 pos;
             glm::vec3 normal;
             glm::vec3 colour;
         };
-
-        struct VertexOverlay {
-            glm::vec2 pos;
-            glm::vec2 UV;
-        };
-
 
         const char* name;
         CSVReader csv;
@@ -54,24 +45,21 @@ class BarChart : public BaseProject {
         // Descriptor Layouts ["classes" of what will be passed to the shaders]
         DescriptorSetLayout DSL_ground;
         DescriptorSetLayout DSL_bar;
-        DescriptorSetLayout DSLGubo, DSLOverlay;
+        DescriptorSetLayout DSLGubo;
 
         // Vertex formats
         VertexDescriptor VD_ground;
         VertexDescriptor VD_bar;
-        VertexDescriptor VOverlay;
 
         // Pipelines [Shader couples]
         Pipeline P_ground;
         Pipeline P_bar;
-        Pipeline POverlay;
 
         // Models, textures and Descriptors (values assigned to the uniforms)
         // Please note that Model objects depends on the corresponding vertex structure
         // Models
         Model<VertexColour> M_ground;
         Model<VertexColour> * M_bars;
-        Model<VertexOverlay> MOverlay;
 
 
         // Descriptor sets
@@ -83,7 +71,6 @@ class BarChart : public BaseProject {
         UniformBlock ubo_ground;
         UniformBlock* ubo_bars;
         GlobalUniformBlock gubo;
-        OverlayUniformBlock uboOverlay;
 
 
 	    TextMaker txt;
@@ -191,11 +178,6 @@ void BarChart::localInit() {
     DSLGubo.init(this, {
                 {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
         });
-    DSLOverlay.init(this, {
-                {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
-                {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}
-        });
-
     VD_bar.init(this, {
                 {0, sizeof(VertexColour), VK_VERTEX_INPUT_RATE_VERTEX}
             }, {
@@ -238,15 +220,6 @@ void BarChart::localInit() {
                 {0, 2, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexColour, colour), sizeof(glm::vec3), COLOR}
             });
 		
-    VOverlay.init(this, {
-                {0, sizeof(VertexOverlay), VK_VERTEX_INPUT_RATE_VERTEX}
-        }, {
-            {0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(VertexOverlay, pos),
-                    sizeof(glm::vec2), OTHER},
-            {0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(VertexOverlay, UV),
-                    sizeof(glm::vec2), UV}
-        });
-
     // Pipelines [Shader couples]
     // The second parameter is the pointer to the vertex definition
     // Third and fourth parameters are respectively the vertex and fragment shaders
@@ -256,9 +229,6 @@ void BarChart::localInit() {
 
     P_bar.init(this, &VD_bar, "shaders/ShaderBarVert.spv", "shaders/ShaderBarFrag.spv", {&DSL_bar, &DSLGubo});
 
-    //POverlay.init(this, &VOverlay, "shaders/OverlayVert.spv", "shaders/OverlayFrag.spv", { &DSLOverlay });
-    //POverlay.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
-        //VK_CULL_MODE_NONE, false);
 
     // Models, textures and Descriptors (values assigned to the uniforms)
 
@@ -620,7 +590,7 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
     printf("\ntime: %f\nline: %d\n", time, line);
     printf("cam pitch: %f\ncam yaw: %f\n", CamPitch, CamYaw);
 
-	txt.update(currentImage, height, width);
+    txt.update(currentImage, height, width);
 }
 
 glm::mat4 BarChart::getWorldMatrixBar(float height) {

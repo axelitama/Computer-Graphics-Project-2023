@@ -91,10 +91,6 @@ void BarChartMap::localInit() {
     DSLGubo.init(this, {
                 {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
         });
-    DSLOverlay.init(this, {
-                {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
-                {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}
-        });
 
     VD_bar.init(this, {
                 {0, sizeof(VertexColour), VK_VERTEX_INPUT_RATE_VERTEX}
@@ -137,15 +133,6 @@ void BarChartMap::localInit() {
                 {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexTexture, normal), sizeof(glm::vec3), NORMAL},
                 {0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(VertexTexture, UV), sizeof(glm::vec2), UV}
             });
-    
-    VOverlay.init(this, {
-                {0, sizeof(VertexOverlay), VK_VERTEX_INPUT_RATE_VERTEX}
-        }, {
-            {0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(VertexOverlay, pos),
-                    sizeof(glm::vec2), OTHER},
-            {0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(VertexOverlay, UV),
-                    sizeof(glm::vec2), UV}
-        });
 
     // Pipelines [Shader couples]
     // The second parameter is the pointer to the vertex definition
@@ -156,9 +143,6 @@ void BarChartMap::localInit() {
 
     P_bar.init(this, &VD_bar, "shaders/ShaderBarVert.spv", "shaders/ShaderBarFrag.spv", {&DSL_bar, &DSLGubo});
 
-    //POverlay.init(this, &VOverlay, "shaders/OverlayVert.spv", "shaders/OverlayFrag.spv", { &DSLOverlay });
-    //POverlay.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
-        //VK_CULL_MODE_NONE, false);
 
     // Models, textures and Descriptors (values assigned to the uniforms)
 

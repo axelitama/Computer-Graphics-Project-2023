@@ -77,8 +77,8 @@ struct TextMaker {
 				         sizeof(glm::vec2), UV}
 				});
 		DSL.init(BP,
-				{{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
-				{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},});
+				{{0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
+				{1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},});
 	}
 
 
@@ -198,8 +198,8 @@ struct TextMaker {
 
 	void createTextDescriptorSets() {
 		DS.init(BP, &DSL, {
-					{0, UNIFORM, sizeof(UniformBlock), nullptr},
-					{1, TEXTURE, 0, &T}
+					{0, TEXTURE, 0, &T},
+					{1, UNIFORM, sizeof(UniformBlock), nullptr}
 				});
 	}
 
@@ -237,7 +237,7 @@ struct TextMaker {
 			glm::scale(glm::mat4(1.0f), glm::vec3(800.0f/w, 600.0f/h, 1.0f))*
 			glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
-		DS.map(currentImage, &ubo_txt, sizeof(ubo_txt), 0);
+		DS.map(currentImage, &ubo_txt, sizeof(ubo_txt), 1);
 	}
 };
     
