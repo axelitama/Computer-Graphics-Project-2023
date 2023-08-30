@@ -309,7 +309,7 @@ void BarChartMap::pipelinesAndDescriptorSetsInit() {
             });
     }
 
-    P_grid.create(VK_PRIMITIVE_TOPOLOGY_LINE_LIST, 1.f);
+    P_grid.create(VK_PRIMITIVE_TOPOLOGY_LINE_LIST, gridLinesWidth);
     DS_grid[0].init(this, &DSL_grid, {
                 {0, UNIFORM, sizeof(UniformBlock), nullptr}
             });

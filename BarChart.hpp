@@ -22,7 +22,9 @@ class BarChart : public BaseProject {
             scalingFactor,
             gridDim,
             groundX,
-            groundZ;
+            groundZ,
+            gridLinesWidth;
+        glm::vec3 gridColor;
 
         struct UniformBlock {
             alignas(16) glm::mat4 mvpMat;
@@ -140,6 +142,8 @@ BarChart::BarChart(const CSVReader& csv, float gridDim) : BaseProject(), csv(csv
     minHeight = 0.000001f;
     scalingFactor = 0.0001;
     this->gridDim = gridDim;
+    gridLinesWidth = 0.5f;
+    gridColor = {0.5, 0.5, 0.5};
 
     groundZ = 1.5;
     groundX = csv.getNumVariables()/2.f+1;
@@ -403,7 +407,7 @@ void BarChart::pipelinesAndDescriptorSetsInit() {
             });
     }
 
-	P_grid.create(VK_PRIMITIVE_TOPOLOGY_LINE_LIST, 1.f);
+	P_grid.create(VK_PRIMITIVE_TOPOLOGY_LINE_LIST, gridLinesWidth);
     DS_grid[0].init(this, &DSL_grid, {
                 {0, UNIFORM, sizeof(UniformBlock), nullptr}
             });
