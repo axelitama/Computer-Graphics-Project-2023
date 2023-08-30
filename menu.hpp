@@ -14,6 +14,7 @@ struct menuData {
     float left;
     float right;
     float zoom;
+    float gridDim;
 };
 
 /// TODO: maybe make this a class

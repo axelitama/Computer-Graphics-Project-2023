@@ -21,6 +21,7 @@ class CSVReader {
         std::vector<std::string> getVariableNames() const;
         std::vector<std::string> getLine(int lineNumber) const;
         int getNumLines() const;
+        float getMaxValue(int *excludeColumns = NULL, int numExcludeColumns = 0);
 };
 
 #endif // CSVREADER_HPP

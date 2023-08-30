@@ -12,11 +12,17 @@ std::vector<SingleText> demoText = {
 class BarChart : public BaseProject {
     public:
 
-        BarChart(const CSVReader& csv);
+        BarChart(const CSVReader& csv, float gridDim = 10000);
 
         ~BarChart();
 
     protected:
+
+        float minHeight,
+            scalingFactor,
+            gridDim,
+            groundX,
+            groundZ;
 
         struct UniformBlock {
             alignas(16) glm::mat4 mvpMat;
@@ -36,6 +42,11 @@ class BarChart : public BaseProject {
             glm::vec3 colour;
         };
 
+        struct VertexLine {
+            glm::vec3 pos;
+            glm::vec3 colour;
+        };
+
         const char* name;
         CSVReader csv;
         float *visualizedValues;
@@ -46,30 +57,36 @@ class BarChart : public BaseProject {
         DescriptorSetLayout DSL_ground;
         DescriptorSetLayout DSL_bar;
         DescriptorSetLayout DSLGubo;
+        DescriptorSetLayout DSL_grid;
 
         // Vertex formats
         VertexDescriptor VD_ground;
         VertexDescriptor VD_bar;
+        VertexDescriptor VD_line;
 
         // Pipelines [Shader couples]
         Pipeline P_ground;
         Pipeline P_bar;
+        Pipeline P_grid;
 
         // Models, textures and Descriptors (values assigned to the uniforms)
         // Please note that Model objects depends on the corresponding vertex structure
         // Models
         Model<VertexColour> M_ground;
         Model<VertexColour> * M_bars;
+        Model<VertexLine> M_grid[2];
 
 
         // Descriptor sets
         DescriptorSet DS_ground;
         DescriptorSet * DS_bars;
         DescriptorSet DSGubo;
+        DescriptorSet DS_grid[2];
         
         // C++ storage for uniform variables
         UniformBlock ubo_ground;
         UniformBlock* ubo_bars;
+        UniformBlock ubo_grid[2];
         GlobalUniformBlock gubo;
 
 
@@ -114,11 +131,18 @@ class BarChart : public BaseProject {
 // Example:
 
 // MAIN ! 
-BarChart::BarChart(const CSVReader& csv) : BaseProject(), csv(csv) {
+BarChart::BarChart(const CSVReader& csv, float gridDim) : BaseProject(), csv(csv) {
     name = "Bar Chart";
     M_bars = new Model<VertexColour>[csv.getNumVariables()-1];
     DS_bars = new DescriptorSet[csv.getNumVariables()-1];
     ubo_bars = new UniformBlock[csv.getNumVariables()-1];
+
+    minHeight = 0.000001f;
+    scalingFactor = 0.0001;
+    this->gridDim = gridDim;
+
+    groundZ = 1.5;
+    groundX = csv.getNumVariables()/2.f+1;
 }
 
 BarChart::~BarChart() {
@@ -164,6 +188,9 @@ void BarChart::localInit() {
     DSL_bar.init(this, {
                 {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
             });
+    DSL_grid.init(this, {
+                {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
+            });
 
     // Descriptor Layouts [what will be passed to the shaders]
     DSL_ground.init(this, {
@@ -184,6 +211,12 @@ void BarChart::localInit() {
                 {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexColour, pos), sizeof(glm::vec3), POSITION},
                 {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexColour, normal), sizeof(glm::vec3), NORMAL},
                 {0, 2, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexColour, colour), sizeof(glm::vec3), COLOR}
+            });
+    VD_line.init(this, {
+                {0, sizeof(VertexLine), VK_VERTEX_INPUT_RATE_VERTEX}
+            }, {
+                {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexLine, pos), sizeof(glm::vec3), POSITION},
+                {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexLine, colour), sizeof(glm::vec3), COLOR}
             });
 
     // Vertex descriptors
@@ -229,6 +262,8 @@ void BarChart::localInit() {
 
     P_bar.init(this, &VD_bar, "shaders/ShaderBarVert.spv", "shaders/ShaderBarFrag.spv", {&DSL_bar, &DSLGubo});
 
+    P_grid.init(this, &VD_line, "shaders/ShaderLineVert.spv", "shaders/ShaderLineFrag.spv", {&DSL_grid, &DSLGubo});
+
 
     // Models, textures and Descriptors (values assigned to the uniforms)
 
@@ -236,14 +271,39 @@ void BarChart::localInit() {
     // The second parameter is the pointer to the vertex definition for this model
     // The third parameter is the file name
     // The last is a constant specifying the file type: currently only OBJ or GLTF
+
+    float start = -groundX + 1;
+
+    // create grid
+    int tmp[1] = {0};
+    int numLines = csv.getMaxValue(tmp, 1) / gridDim + 1;
+    for(int i=0; i <= numLines; i++) {
+        M_grid[0].vertices.push_back({{start-1, i*gridDim*scalingFactor+minHeight, 0}, {1, 1, 1}});
+        M_grid[0].vertices.push_back({{-start+1, i*gridDim*scalingFactor+minHeight, 0}, {1, 1, 1}});
+        printf("%f\n", i*gridDim*scalingFactor);
+    }
+    for(int i=0; i <= numLines*2; i++) {
+        M_grid[0].indices.push_back(i);
+    }
+    M_grid[0].initMesh(this, &VD_line);
+
+    for(int i=0; i <= numLines; i++) {
+        M_grid[1].vertices.push_back({{0, i*gridDim*scalingFactor+minHeight, -1.5}, {1, 1, 1}});
+        M_grid[1].vertices.push_back({{0, i*gridDim*scalingFactor+minHeight, 1.5}, {1, 1, 1}});
+        printf("%f\n", i*gridDim*scalingFactor);
+    }
+    for(int i=0; i <= numLines*2; i++) {
+        M_grid[1].indices.push_back(i);
+    }
+    M_grid[1].initMesh(this, &VD_line);
     
     // Creates a mesh with direct enumeration of vertices and indices
-    float start = - (csv.getNumVariables()-1)/2.f;
+    
     M_ground.vertices = {
-                    {{start-1,-0.1,-1.5}, {0.f, 1.f, 0.f}, {1.0f,1.0f, 1.0f}},
-                    {{start-1,-0.1,1.5}, {0.f, 1.f, 0.f}, {1.0f,1.0f, 1.0f}},
-                    {{-start+1,-0.1,-1.5}, {0.f, 1.f, 0.f}, {1.0f,1.0f, 1.0f}},
-                    {{-start+1,-0.1,1.5}, {0.f, 1.f, 0.f}, {1.0f,1.0f, 1.0f}}
+                    {{-groundX,-0.1,-groundZ}, {0.f, 1.f, 0.f}, {1.0f,1.0f, 1.0f}},
+                    {{-groundX,-0.1,groundZ}, {0.f, 1.f, 0.f}, {1.0f,1.0f, 1.0f}},
+                    {{groundX,-0.1,-groundZ}, {0.f, 1.f, 0.f}, {1.0f,1.0f, 1.0f}},
+                    {{groundX,-0.1,groundZ}, {0.f, 1.f, 0.f}, {1.0f,1.0f, 1.0f}}
     };
     M_ground.indices = {0, 1, 2, 1, 3, 2};
     M_ground.initMesh(this, &VD_ground);
@@ -342,7 +402,15 @@ void BarChart::pipelinesAndDescriptorSetsInit() {
                 {0, UNIFORM, sizeof(UniformBlock), nullptr}
             });
     }
-	
+
+	P_grid.create(VK_PRIMITIVE_TOPOLOGY_LINE_LIST, 1.f);
+    DS_grid[0].init(this, &DSL_grid, {
+                {0, UNIFORM, sizeof(UniformBlock), nullptr}
+            });
+    DS_grid[1].init(this, &DSL_grid, {
+                {0, UNIFORM, sizeof(UniformBlock), nullptr}
+            });
+
     txt.pipelinesAndDescriptorSetsInit();
 }
 
@@ -351,9 +419,12 @@ void BarChart::pipelinesAndDescriptorSetsInit() {
 void BarChart::pipelinesAndDescriptorSetsCleanup() {
     // Cleanup pipelines
     P_ground.cleanup();
+    P_grid.cleanup();
 
     // Cleanup datasets
     DS_ground.cleanup();
+    DS_grid[0].cleanup();
+    DS_grid[1].cleanup();
 
     P_bar.cleanup();
     for (int i = 0; i < csv.getNumVariables()-1; i++) {
@@ -369,22 +440,24 @@ void BarChart::pipelinesAndDescriptorSetsCleanup() {
 // You also have to destroy the pipelines: since they need to be rebuilt, they have two different
 // methods: .cleanup() recreates them, while .destroy() delete them completely
 void BarChart::localCleanup() {
-    // Cleanup textures
-    
     // Cleanup models
     M_ground.cleanup();
     for (int i = 0; i < csv.getNumVariables()-1; i++) {
         M_bars[i].cleanup();
-    }	
+    }
+    M_grid[0].cleanup();
+    M_grid[1].cleanup();
     
     // Cleanup descriptor set layouts
     DSL_ground.cleanup();
     DSL_bar.cleanup();
     DSLGubo.cleanup();
+    DSL_grid.cleanup();
     
     // Destroies the pipelines
     P_ground.destroy();
     P_bar.destroy();
+    P_grid.destroy();
 
 	txt.localCleanup();
 }
@@ -426,6 +499,15 @@ void BarChart::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentI
         vkCmdDrawIndexed(commandBuffer,
                 static_cast<uint32_t>(M_bars[i].indices.size()), 1, 0, 0, 0);
     }
+
+    P_grid.bind(commandBuffer);
+    DS_grid[0].bind(commandBuffer, P_grid, 0, currentImage);
+    M_grid[0].bind(commandBuffer);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M_grid[0].indices.size()), 1, 0, 0, 0);
+
+    DS_grid[1].bind(commandBuffer, P_grid, 0, currentImage);
+    M_grid[1].bind(commandBuffer);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M_grid[1].indices.size()), 1, 0, 0, 0);
 		
     txt.populateCommandBuffer(commandBuffer, currentImage, 0);
 }
@@ -591,10 +673,24 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
     printf("cam pitch: %f\ncam yaw: %f\n", CamPitch, CamYaw);
 
     txt.update(currentImage, height, width);
+
+    if(camPos[2] > 0)
+        World = glm::translate(glm::mat4(1), glm::vec3(0, 0, -groundZ)) * glm::mat4(1);
+    else
+        World = glm::translate(glm::mat4(1), glm::vec3(0, 0, groundZ)) * glm::mat4(1);
+    ubo_grid[0].mvpMat = Prj * View * World;
+    DS_grid[0].map(currentImage, &ubo_grid[0], sizeof(ubo_grid[0]), 0);
+
+    if(camPos[0] > 0)
+        World = glm::translate(glm::mat4(1), glm::vec3(-groundX, 0, 0)) * glm::mat4(1);
+    else
+        World = glm::translate(glm::mat4(1), glm::vec3(groundX, 0, 0)) * glm::mat4(1);
+    ubo_grid[0].mvpMat = Prj * View * World;
+    DS_grid[1].map(currentImage, &ubo_grid[0], sizeof(ubo_grid[0]), 0);
 }
 
 glm::mat4 BarChart::getWorldMatrixBar(float height) {
-    height = height * 0.0001f + 0.000001f;
+    height = height * scalingFactor + minHeight;
     glm::mat4 World =  glm::scale(glm::mat4(1), glm::vec3(1.f, height, 1.f));
     return World;
 }

@@ -10,6 +10,7 @@ int selected_radio_button = 2;
 std::string mode="barChartMap", csv_data = "data/cases_by_region.csv", csv_coordinates = "data/region_coordinates.csv", map = "textures/map-47.5-20-34.5-5.png";
 int latitude_column=2, longitude_column=3;
 float up=47.5f, down=34.5f, left=5.f, right=20.f, zoom=0.00002f;
+float gridDim = 10000;
 
 bool isOk = false;
 int window_width, window_height;
@@ -75,6 +76,7 @@ menuData* menu() {
     data->left = left;
     data->right = right;
     data->zoom = zoom;
+    data->gridDim = gridDim;
 
     return data;
 
@@ -155,6 +157,8 @@ void barChartMenu() {
         // close
         ImGuiFileDialog::Instance()->Close();
     }
+
+    ImGui::InputFloat("Grid dimension", &gridDim, 0.0f, 0.0f, "%.6f");
 }
 
 void barChartMapMenu() {

@@ -7,7 +7,7 @@
 class BarChartMap : public BarChart {
     public:
 
-        BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates, float up, float sx, float dx, float down, const float zoom, std::string mapFile);
+        BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates, int latCol, int lonCol, float up, float sx, float dx, float down, const float zoom, std::string mapFile, float dimGrid);
 
     protected:
 
@@ -50,7 +50,7 @@ extern "C" {
 }
 
 
-BarChartMap::BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates, float up, float sx, float dx, float down, const float zoom, std::string mapFile) : BarChart(csv){
+BarChartMap::BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates, int latCol, int lonCol, float up, float sx, float dx, float down, const float zoom, std::string mapFile, float dimGrid = 10000) : BarChart(csv, dimGrid){
     up = degreeLatitudeToY(up);
     sx = degreeLongitudeToX(sx);
     dx = degreeLongitudeToX(dx);
@@ -65,12 +65,15 @@ BarChartMap::BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates,
 
 	for (int i = 0; i < csv_coordinates.getNumLines(); i++) {
 		// Converting latitude and longitude to mercator cartesian coordinates	
-		bar_coordinates[i].x = degreeLatitudeToY(std::stof(csv_coordinates.getLine(i)[2]));
-		bar_coordinates[i].z = degreeLongitudeToX(std::stof(csv_coordinates.getLine(i)[3]));
+		bar_coordinates[i].x = degreeLatitudeToY(std::stof(csv_coordinates.getLine(i)[latCol]));
+		bar_coordinates[i].z = degreeLongitudeToX(std::stof(csv_coordinates.getLine(i)[lonCol]));
 		// Scaling and translating the coordinates
 		bar_coordinates[i].z = -zoom * (bar_coordinates[i].z - sx - (dx - sx) / 2.f);
 		bar_coordinates[i].x = zoom * (up - bar_coordinates[i].x - (up - down) / 2.f);
     }
+
+    groundX = latDim * zoom / 2;
+    groundZ = lonDim * zoom / 2;
 }
 	
 // Here you load and setup all your Vulkan Models and Texutures.
@@ -79,7 +82,9 @@ void BarChartMap::localInit() {
     DSL_bar.init(this, {
                 {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
             });
-
+    DSL_grid.init(this, {
+                {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
+            });
     // Descriptor Layouts [what will be passed to the shaders]
     DSL_ground.init(this, {
                 // this array contains the bindings:
@@ -101,6 +106,12 @@ void BarChartMap::localInit() {
                 {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexColour, pos), sizeof(glm::vec3), POSITION},
                 {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexColour, normal), sizeof(glm::vec3), NORMAL},
                 {0, 2, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexColour, colour), sizeof(glm::vec3), COLOR}
+            });
+    VD_line.init(this, {
+                {0, sizeof(VertexLine), VK_VERTEX_INPUT_RATE_VERTEX}
+            }, {
+                {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexLine, pos), sizeof(glm::vec3), POSITION},
+                {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexLine, colour), sizeof(glm::vec3), COLOR}
             });
 
     // Vertex descriptors
@@ -143,7 +154,7 @@ void BarChartMap::localInit() {
     // The last array, is a vector of pointer to the layouts of the sets that will
     // be used in this pipeline. The first element will be set 0, and so on..
     P_ground.init(this, &VD_ground, "shaders/ShaderVert.spv", "shaders/ShaderFrag.spv", {&DSL_ground, &DSLGubo});
-
+    P_grid.init(this, &VD_line, "shaders/ShaderLineVert.spv", "shaders/ShaderLineFrag.spv", {&DSL_grid, &DSLGubo});
     P_bar.init(this, &VD_bar, "shaders/ShaderBarVert.spv", "shaders/ShaderBarFrag.spv", {&DSL_bar, &DSLGubo});
 
 
@@ -155,16 +166,37 @@ void BarChartMap::localInit() {
     // The last is a constant specifying the file type: currently only OBJ or GLTF
     
     // Creates a mesh with direct enumeration of vertices and indices
-    float xL = latDim * zoom;
-    float zL = lonDim * zoom;
     M_ground.vertices = {
-                    {{-xL/2,-0.1,-zL/2}, {0.f, 1.f, 0.f}, {1.0f,0.0f}},
-                    {{-xL/2,-0.1,zL/2}, {0.f, 1.f, 0.f}, {0.0f,0.0f}},
-                    {{xL/2,-0.1,-zL/2}, {0.f, 1.f, 0.f}, {1.0f,1.0f}},
-                    {{xL/2,-0.1,zL/2}, {0.f, 1.f, 0.f}, {0.0f,1.0f}}
+                    {{-groundX,-0.1,-groundZ}, {0.f, 1.f, 0.f}, {1.0f,0.0f}},
+                    {{-groundX,-0.1,groundZ}, {0.f, 1.f, 0.f}, {0.0f,0.0f}},
+                    {{groundX,-0.1,-groundZ}, {0.f, 1.f, 0.f}, {1.0f,1.0f}},
+                    {{groundX,-0.1,groundZ}, {0.f, 1.f, 0.f}, {0.0f,1.0f}}
     };
     M_ground.indices = {0, 1, 2, 1, 3, 2};
     M_ground.initMesh(this, &VD_ground);
+
+    // create grid
+    int tmp[1] = {0};
+    int numLines = csv.getMaxValue(tmp, 1) / gridDim + 1;
+    for(int i=0; i <= numLines; i++) {
+        M_grid[0].vertices.push_back({{-groundX, i*gridDim*scalingFactor+minHeight, 0}, {1, 1, 1}});
+        M_grid[0].vertices.push_back({{groundX, i*gridDim*scalingFactor+minHeight, 0}, {1, 1, 1}});
+        printf("%f\n", i*gridDim*scalingFactor);
+    }
+    for(int i=0; i <= numLines*2; i++) {
+        M_grid[0].indices.push_back(i);
+    }
+    M_grid[0].initMesh(this, &VD_line);
+
+    for(int i=0; i <= numLines; i++) {
+        M_grid[1].vertices.push_back({{0, i*gridDim*scalingFactor+minHeight, -groundZ}, {1, 1, 1}});
+        M_grid[1].vertices.push_back({{0, i*gridDim*scalingFactor+minHeight, groundZ}, {1, 1, 1}});
+        printf("%f\n", i*gridDim*scalingFactor);
+    }
+    for(int i=0; i <= numLines*2; i++) {
+        M_grid[1].indices.push_back(i);
+    }
+    M_grid[1].initMesh(this, &VD_line);
 
     //create cilinders for bars
     ///------------------------------------------------------
@@ -276,6 +308,15 @@ void BarChartMap::pipelinesAndDescriptorSetsInit() {
                 {0, UNIFORM, sizeof(UniformBlock), nullptr}
             });
     }
+
+    P_grid.create(VK_PRIMITIVE_TOPOLOGY_LINE_LIST, 1.f);
+    DS_grid[0].init(this, &DSL_grid, {
+                {0, UNIFORM, sizeof(UniformBlock), nullptr}
+            });
+    DS_grid[1].init(this, &DSL_grid, {
+                {0, UNIFORM, sizeof(UniformBlock), nullptr}
+            });
+
     txt.pipelinesAndDescriptorSetsInit();
 }
 
@@ -314,9 +355,17 @@ void BarChartMap::populateCommandBuffer(VkCommandBuffer commandBuffer, int curre
         vkCmdDrawIndexed(commandBuffer,
                 static_cast<uint32_t>(M_bars[i].indices.size()), 1, 0, 0, 0);
     }   
+
+     P_grid.bind(commandBuffer);
+    DS_grid[0].bind(commandBuffer, P_grid, 0, currentImage);
+    M_grid[0].bind(commandBuffer);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M_grid[0].indices.size()), 1, 0, 0, 0);
+
+    DS_grid[1].bind(commandBuffer, P_grid, 0, currentImage);
+    M_grid[1].bind(commandBuffer);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M_grid[1].indices.size()), 1, 0, 0, 0);
+
     txt.populateCommandBuffer(commandBuffer, currentImage, 0);
-
-
 }
 
 // Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -325,22 +374,27 @@ void BarChartMap::populateCommandBuffer(VkCommandBuffer commandBuffer, int curre
 // methods: .cleanup() recreates them, while .destroy() delete them completely
 void BarChartMap::localCleanup() {
     /// NOTE: can't call parent's cleanup because it will try to use parent's M_ground
+    // Cleanup textures
+    T.cleanup();
     // Cleanup models
     M_ground.cleanup();
     for (int i = 0; i < csv.getNumVariables()-1; i++) {
         M_bars[i].cleanup();
-    }	
+    }
+    M_grid[0].cleanup();
+    M_grid[1].cleanup();
     
     // Cleanup descriptor set layouts
     DSL_ground.cleanup();
     DSL_bar.cleanup();
     DSLGubo.cleanup();
+    DSL_grid.cleanup();
     
     // Destroies the pipelines
     P_ground.destroy();
     P_bar.destroy();
-    // Cleanup textures
-    T.cleanup();
+    P_grid.destroy();
+
 	txt.localCleanup();
 }
 

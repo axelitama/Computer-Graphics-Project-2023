@@ -52,3 +52,26 @@ void CSVReader::readData() {
         data.push_back(lineData);
     }
 }
+
+float CSVReader::getMaxValue(int *excludeColumns, int numExcludeColumns) {
+    float maxValue = 0.0;
+    for (int i = 0; i < data.size(); i++) {
+        for (int j = 0; j < data[i].size(); j++) {
+            bool exclude = false;
+            for (int k = 0; k < numExcludeColumns; k++) {
+                if (j == excludeColumns[k]) {
+                    exclude = true;
+                    break;
+                }
+            }
+            if (exclude) {
+                continue;
+            }
+            float value = std::stof(data[i][j]);
+            if (value > maxValue) {
+                maxValue = value;
+            }
+        }
+    }
+    return maxValue;
+}
