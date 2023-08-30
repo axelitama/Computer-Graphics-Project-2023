@@ -7,7 +7,7 @@
 class BarChartMap : public BarChart {
     public:
 
-        BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates, float up, float sx, float dx, float down, const float zoom);
+        BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates, float up, float sx, float dx, float down, const float zoom, std::string mapFile);
 
     protected:
 
@@ -16,6 +16,8 @@ class BarChartMap : public BarChart {
 			glm::vec3 normal;
 			glm::vec2 UV;
 		};
+
+        std::string mapFile;
 
 		// Models, textures and Descriptors (values assigned to the uniforms)
 		// Please note that Model objects depends on the corresponding vertex structure
@@ -48,7 +50,7 @@ extern "C" {
 }
 
 
-BarChartMap::BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates, float up, float sx, float dx, float down, const float zoom) : BarChart(csv){
+BarChartMap::BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates, float up, float sx, float dx, float down, const float zoom, std::string mapFile) : BarChart(csv){
     up = degreeLatitudeToY(up);
     sx = degreeLongitudeToX(sx);
     dx = degreeLongitudeToX(dx);
@@ -57,6 +59,7 @@ BarChartMap::BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates,
     this->latDim = up - down;
     this->lonDim = dx - sx;
     this->zoom = zoom;
+    this->mapFile = mapFile;
 
     bar_coordinates = new coordinates[csv_coordinates.getNumLines()];
 
@@ -233,7 +236,7 @@ void BarChartMap::localInit() {
     
     // Create the textures
     // The second parameter is the file name
-    T.init(this,   "textures/map-47.5-20-34.5-5.png");
+    T.init(this,   mapFile.c_str());
 	txt.init(this, &demoText);
     
     // Init local variables

@@ -1,22 +1,31 @@
 #include "CSVReader.hpp"
 #include "BarChart.hpp"
 #include "BarChartMap.hpp"
+#include "menu.hpp"
 
-int main() {
 
-	/// TODO: make a menu
+int main()
+{
 
-	CSVReader csv("data/cases_by_region.csv");
+	struct menuData * data = menu();
+
+	if(data->closed) {
+		delete data;
+		return EXIT_SUCCESS;
+	}
+
+	CSVReader csv(data->csv_data);
+
 	BaseProject *app;
 
-	#define MAP true
-	if(MAP) {
-		CSVReader csv_coordinates("data/region_coordinates.csv");
-		app = new BarChartMap(csv, csv_coordinates, 47.5f, 5.f, 20.f, 34.5f, 0.00002);
-	} else {
+	if(data->mode == "barChartMap") {
+		CSVReader csv_coordinates(data->csv_coordinates);
+		app = new BarChartMap(csv, csv_coordinates, data->up, data->left, data->right, data->down, data->zoom, data->map);
+	} else if(data->mode == "barChart") {
 		app = new BarChart(csv);
 	}
-    
+
+	delete data;
 
     try {
         app->run();
