@@ -267,7 +267,7 @@ struct Pipeline {
   			  std::vector<DescriptorSetLayout *> D);
   	void setAdvancedFeatures(VkCompareOp _compareOp, VkPolygonMode _polyModel,
  						VkCullModeFlagBits _CM, bool _transp);
-  	void create();
+  	void create(VkPrimitiveTopology topology, float lineWidth);
   	void destroy();
   	void bind(VkCommandBuffer commandBuffer);
   	
@@ -2487,7 +2487,7 @@ void Pipeline::setAdvancedFeatures(VkCompareOp _compareOp, VkPolygonMode _polyMo
 }
 
 
-void Pipeline::create() {	
+void Pipeline::create(VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, float lineWidth = 1.0f) {	
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType =
     		VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -2521,7 +2521,7 @@ void Pipeline::create() {
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.sType =
 		VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	inputAssembly.topology = topology;
 	inputAssembly.primitiveRestartEnable = VK_FALSE;
 
 	VkViewport viewport{};
@@ -2550,7 +2550,7 @@ void Pipeline::create() {
 	rasterizer.depthClampEnable = VK_FALSE;
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = polyModel;
-	rasterizer.lineWidth = 1.0f;
+	rasterizer.lineWidth = lineWidth;
 	rasterizer.cullMode = VK_CULL_MODE_NONE;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
