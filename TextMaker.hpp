@@ -128,8 +128,15 @@ struct TextMaker {
 					int c = ((int)Txt.l[i][j]) - minChar;
 					if((c >= 0) && (c <= maxChar)) {
 //std::cout << k << " " << j << " " << i << " " << ib << " " << c << "\n";
-						CharData d = Fonts[FontId].P[c];
-						
+						CharData d;
+						try {
+							d = Fonts[FontId].P[c];
+						}
+						catch(const std::exception& e) {
+							std::cout << "Error: " << e.what() << "\n";
+							std::cout << "Error: not supported character" << c << "\n";
+							continue;
+						}
 						TextVertex vertex{};
 			
 						vertex.pos = {
