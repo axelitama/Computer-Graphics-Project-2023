@@ -11,12 +11,19 @@ std::vector<SingleText> demoText = {
     {1, {"Very nice data", "", "", ""}, 0, 0},
 };
 
+
 class BarChart : public BaseProject {
     public:
 
         BarChart(const CSVReader& csv, float gridDim = 10000);
 
         ~BarChart();
+
+        void pauseData() ;
+
+        void playData();
+
+        void toggleRotation();
 
     protected:
 
@@ -119,7 +126,37 @@ class BarChart : public BaseProject {
 
         glm::mat4 getWorldMatrixBar(float height);
 
+
 };
+
+
+BarChart *_BP_Ref;
+
+
+
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		double xpos, ypos;
+		glfwGetCursorPos(window, &xpos, &ypos);
+
+		int height, width;
+		glfwGetWindowSize(window, &width, &height);
+		//print xpos and ypos
+		printf("xpos: %f, ypos: %f\n", xpos, ypos);
+
+		fflush(stdout);
+        
+		if (xpos >= width-100 && xpos <= width-70 && ypos >= height-35 && ypos <= height-10) {
+			((BarChart *)_BP_Ref)->playData();
+		}else if (xpos >= width-60 && xpos <= width-30 && ypos >= height-35 && ypos <= height-10) {
+			((BarChart *)_BP_Ref)->pauseData();
+		}else if (xpos >= width-30 && xpos <= width && ypos >= height-35 && ypos <= height-10) {
+			((BarChart *)_BP_Ref)->toggleRotation();
+		}
+		
+	}
+}
+
 
 /**************************************************
 *****   TODO: Following code should have been in BarChart.cpp but that will cause multiple definition problem
@@ -392,6 +429,9 @@ void BarChart::localInit() {
 
     visualizedValues = (float *)malloc((csv.getNumVariables()-1)*sizeof(float));
     legend->setLegend(names, colors);
+
+    _BP_Ref = this;
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
 }
 	
 // Here you create your pipelines and Descriptor Sets!
@@ -534,6 +574,21 @@ void BarChart::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentI
     hud.populateCommandBuffer(commandBuffer, currentImage, 0);
 }
 
+bool isAutoRotationEnabled = false;
+bool isPauseEnabled = true;
+
+void BarChart::pauseData(){
+    isPauseEnabled = true;
+}
+
+void BarChart::playData(){
+    isPauseEnabled = false;
+}
+
+void BarChart::toggleRotation(){
+    isAutoRotationEnabled = !isAutoRotationEnabled;
+}
+
 // Here is where you update the uniforms.
 // Very likely this will be where you will be writing the logic of your application.
 void BarChart::updateUniformBuffer(uint32_t currentImage) {
@@ -546,11 +601,10 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
     float deltaT;
     glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
 
-    static bool isAutoRotationEnabled = false;
     static bool wasAutoRotationPressed = false;
     bool isAutoRotationPressed = false; 
 
-    static bool isPauseEnabled = true;
+
     static bool wasPausePressed = false;
     bool isPausePressed = false;
     
@@ -724,5 +778,8 @@ glm::mat4 BarChart::getWorldMatrixBar(float height) {
     glm::mat4 World =  glm::scale(glm::mat4(1), glm::vec3(1.f, height, 1.f));
     return World;
 }
+
+
+
 
 #endif // BARCHART_HPP

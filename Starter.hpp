@@ -315,6 +315,7 @@ class BaseProject {
 	friend class DescriptorSetLayout;
 	friend class DescriptorSet;
 public:
+    GLFWwindow* window;
 	virtual void setWindowParameters() = 0;
     void run() {
     	windowResizable = GLFW_FALSE;
@@ -336,7 +337,6 @@ protected:
 	int texturesInPool;
 	int setsInPool;
 
-    GLFWwindow* window;
     VkInstance instance;
 
 	VkSurfaceKHR surface;

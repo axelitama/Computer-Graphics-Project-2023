@@ -3,6 +3,7 @@ struct HudVertex {
 	glm::vec2 texCoord;
 };
 
+
 struct HudMaker {
 	VertexDescriptor VD;	
 	
@@ -23,7 +24,6 @@ struct HudMaker {
 		createHudPipeline();
 		createHudModelAndTexture();
 	}
-
 
 	void createHudDescriptorSetAndVertexLayout() {
 		VD.init(BP, {
@@ -58,10 +58,10 @@ struct HudMaker {
 
 	void createHudMesh() {
 		// Create the vertices
-		M.vertices.push_back({{0.5f, 0.5f}, {0.5f, 0.5f}});
-		M.vertices.push_back({{1.0f, 0.5f}, {1.0f, 0.5f}});
+		M.vertices.push_back({{0.0f, 0.0f}, {0.0f, 0.0f}});
+		M.vertices.push_back({{1.0f, 0.0f}, {1.0f, 0.0f}});
 		M.vertices.push_back({{1.0f, 1.0f}, {1.0f, 1.0f}});
-		M.vertices.push_back({{0.5f, 1.0f}, {0.5f, 1.0f}});
+		M.vertices.push_back({{0.0f, 1.0f}, {0.0f, 1.0f}});
 		// Create the indices
 		M.indices.push_back(0);
 		M.indices.push_back(1);
@@ -109,7 +109,7 @@ struct HudMaker {
 
 	void update(uint32_t currentImage, int h, int w){
 		ubo_txt.mvpMat = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f)) *
-			glm::scale(glm::mat4(1.0f), glm::vec3(800.0f/w, 600.0f/h, 1.0f))*
+			glm::scale(glm::mat4(1.0f), glm::vec3(200.0f/w, 75.0f/h, 1.0f))*
 			glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, -1.0f, -1.0f));
 
 

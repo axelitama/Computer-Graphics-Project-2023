@@ -268,6 +268,8 @@ void BarChartMap::localInit() {
         M_bars[i].indices.push_back(nv1 * nv2 + 1); M_bars[i].indices.push_back(nv1 * nv2 + 2 * nv1 + 1); M_bars[i].indices.push_back(nv1 * nv2 + 3);
 
         M_bars[i].initMesh(this, &VD_bar);
+        _BP_Ref = this;
+        glfwSetMouseButtonCallback(window, mouseButtonCallback);
     }
 //----------------------------------------------------------
 
