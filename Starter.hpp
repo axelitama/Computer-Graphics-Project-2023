@@ -159,6 +159,10 @@ struct VertexComponent {
 	uint32_t offset;
 };
 
+struct UniformBlock {
+	alignas(16) glm::mat4 mvpMat;
+};
+
 struct VertexDescriptor {
 	BaseProject *BP;
 	

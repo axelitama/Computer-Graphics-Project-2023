@@ -4,6 +4,7 @@
 #include "Starter.hpp"
 #include "CSVReader.hpp"
 #include "TextMaker.hpp"
+#include "Hud.hpp"
 
 std::vector<SingleText> demoText = {
     {1, {"Very nice data", "", "", ""}, 0, 0},
@@ -93,6 +94,7 @@ class BarChart : public BaseProject {
 
 
 	    TextMaker txt;
+	    HudMaker hud;
 
         // Other application parameters
         float CamH, CamRadius, CamPitch, CamYaw, targtH;
@@ -366,6 +368,7 @@ void BarChart::localInit() {
     }
 
 	txt.init(this, &demoText);
+	hud.init(this);
     
     // Create the textures
     // The second parameter is the file name
@@ -416,6 +419,7 @@ void BarChart::pipelinesAndDescriptorSetsInit() {
             });
 
     txt.pipelinesAndDescriptorSetsInit();
+    hud.pipelinesAndDescriptorSetsInit();
 }
 
 // Here you destroy your pipelines and Descriptor Sets!
@@ -437,6 +441,7 @@ void BarChart::pipelinesAndDescriptorSetsCleanup() {
     DSGubo.cleanup();
 
 	txt.pipelinesAndDescriptorSetsCleanup();
+	hud.pipelinesAndDescriptorSetsCleanup();
 }
 
 // Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -464,6 +469,7 @@ void BarChart::localCleanup() {
     P_grid.destroy();
 
 	txt.localCleanup();
+	hud.localCleanup();
 }
 	
 // Here it is the creation of the command buffer:
@@ -514,6 +520,7 @@ void BarChart::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentI
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M_grid[1].indices.size()), 1, 0, 0, 0);
 		
     txt.populateCommandBuffer(commandBuffer, currentImage, 0);
+    hud.populateCommandBuffer(commandBuffer, currentImage, 0);
 }
 
 // Here is where you update the uniforms.
@@ -593,8 +600,8 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
 
     
     // print the controls (m variable values)
-    std::cout << m.x << " " << m.y << " " << m.z << std::endl;
-    std::cout << r.x << " " << r.y << " " << r.z << std::endl;
+        // std::cout << m.x << " " << m.y << " " << m.z << std::endl;
+        // std::cout << r.x << " " << r.y << " " << r.z << std::endl;
 
 
     glm::mat4 Prj = glm::perspective(FOVy, Ar, nearPlane, farPlane);
@@ -611,7 +618,7 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
     ));
 
     // print campitch and camyaw
-    std::cout << CamPitch << " " << CamYaw << std::endl;
+    // std::cout << CamPitch << " " << CamYaw << std::endl;
 
 
 
@@ -673,10 +680,11 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
         ubo_bars[i].mvpMat = Prj * View * World;
         DS_bars[i].map(currentImage, &ubo_bars[i], sizeof(ubo_bars[i]), 0);
     }
-    printf("\ntime: %f\nline: %d\n", time, line);
-    printf("cam pitch: %f\ncam yaw: %f\n", CamPitch, CamYaw);
+    // printf("\ntime: %f\nline: %d\n", time, line);
+    // printf("cam pitch: %f\ncam yaw: %f\n", CamPitch, CamYaw);
 
     txt.update(currentImage, height, width);
+    hud.update(currentImage, height, width);
 
     if(camPos[2] > 0)
         World = glm::translate(glm::mat4(1), glm::vec3(0, 0, -groundZ)) * glm::mat4(1);
