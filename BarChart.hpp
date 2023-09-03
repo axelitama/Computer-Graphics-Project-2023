@@ -530,9 +530,10 @@ void BarChart::localCleanup() {
 // You send to the GPU all the objects you want to draw,
 // with their buffers and textures
 void BarChart::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-    DSGubo.bind(commandBuffer, P_bar, 1, currentImage);
+    
     // binds the pipeline
     P_ground.bind(commandBuffer);
+    DSGubo.bind(commandBuffer, P_ground, 1, currentImage);
     // For a pipeline object, this command binds the corresponing pipeline to the command buffer passed in its parameter
 
     // binds the data set
@@ -557,6 +558,7 @@ void BarChart::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentI
 
 
     P_bar.bind(commandBuffer);
+    DSGubo.bind(commandBuffer, P_bar, 1, currentImage);
     for (int i = 0; i < csv.getNumVariables()-1; i++) {
         DS_bars[i].bind(commandBuffer, P_bar, 0, currentImage);
         M_bars[i].bind(commandBuffer);
@@ -565,6 +567,7 @@ void BarChart::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentI
     }
 
     P_grid.bind(commandBuffer);
+    DSGubo.bind(commandBuffer, P_grid, 1, currentImage);
     DS_grid[0].bind(commandBuffer, P_grid, 0, currentImage);
     M_grid[0].bind(commandBuffer);
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M_grid[0].indices.size()), 1, 0, 0, 0);
@@ -572,7 +575,7 @@ void BarChart::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentI
     DS_grid[1].bind(commandBuffer, P_grid, 0, currentImage);
     M_grid[1].bind(commandBuffer);
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M_grid[1].indices.size()), 1, 0, 0, 0);
-		
+	
     txt.populateCommandBuffer(commandBuffer, currentImage, 0);
     hud.populateCommandBuffer(commandBuffer, currentImage, 0);
 }

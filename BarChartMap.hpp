@@ -333,9 +333,9 @@ void BarChartMap::pipelinesAndDescriptorSetsInit() {
 
 /// NOTE: need this because parent will try to use parent M_ground
 void BarChartMap::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-    DSGubo.bind(commandBuffer, P_bar, 1, currentImage);
     // binds the pipeline
     P_ground.bind(commandBuffer);
+    DSGubo.bind(commandBuffer, P_ground, 1, currentImage);
     // For a pipeline object, this command binds the corresponing pipeline to the command buffer passed in its parameter
 
     // binds the data set
@@ -360,6 +360,7 @@ void BarChartMap::populateCommandBuffer(VkCommandBuffer commandBuffer, int curre
 
 
     P_bar.bind(commandBuffer);
+    DSGubo.bind(commandBuffer, P_bar, 1, currentImage);
     for (int i = 0; i < csv.getNumVariables()-1; i++) {
         DS_bars[i].bind(commandBuffer, P_bar, 0, currentImage);
         M_bars[i].bind(commandBuffer);
@@ -367,7 +368,8 @@ void BarChartMap::populateCommandBuffer(VkCommandBuffer commandBuffer, int curre
                 static_cast<uint32_t>(M_bars[i].indices.size()), 1, 0, 0, 0);
     }   
 
-     P_grid.bind(commandBuffer);
+    P_grid.bind(commandBuffer);
+    DSGubo.bind(commandBuffer, P_grid, 1, currentImage);
     DS_grid[0].bind(commandBuffer, P_grid, 0, currentImage);
     M_grid[0].bind(commandBuffer);
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M_grid[0].indices.size()), 1, 0, 0, 0);
