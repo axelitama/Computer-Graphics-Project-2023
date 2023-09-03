@@ -5,6 +5,7 @@
 #include "CSVReader.hpp"
 #include "TextMaker.hpp"
 #include "Hud.hpp"
+#include "legend.hpp"
 
 std::vector<SingleText> demoText = {
     {1, {"Very nice data", "", "", ""}, 0, 0},
@@ -18,6 +19,8 @@ class BarChart : public BaseProject {
         ~BarChart();
 
     protected:
+
+        Legend * legend;
 
         float minHeight,
             scalingFactor,
@@ -92,7 +95,6 @@ class BarChart : public BaseProject {
         UniformBlock ubo_grid[2];
         GlobalUniformBlock gubo;
 
-
 	    TextMaker txt;
 	    HudMaker hud;
 
@@ -116,6 +118,7 @@ class BarChart : public BaseProject {
         void updateUniformBuffer(uint32_t currentImage) override;
 
         glm::mat4 getWorldMatrixBar(float height);
+
 };
 
 /**************************************************
@@ -191,6 +194,8 @@ void BarChart::onWindowResize(int w, int h) {
 // Here you load and setup all your Vulkan Models and Texutures.
 // Here you also create your Descriptor set layouts and load the shaders for the pipelines
 void BarChart::localInit() {
+    legend = &Legend::getInstance(window);
+
     DSL_bar.init(this, {
                 {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
             });
@@ -315,12 +320,17 @@ void BarChart::localInit() {
     M_ground.initMesh(this, &VD_ground);
 
     //create parallelepipeds for bars
+
+    std::vector<std::string> names;
+    std::vector<glm::vec3> colors;
     
     for (int i = 0; i < csv.getNumVariables()-1; i++) {
+        names.push_back(csv.getVariableNames()[i+1]);
         //create a parallelepiped of a random color
         float r = (float)rand() / (float)RAND_MAX;
         float g = (float)rand() / (float)RAND_MAX;
         float b = (float)rand() / (float)RAND_MAX;
+        colors.push_back(glm::vec3(r, g, b));
         // add the vertices putting position, normal (replicated vertices) and color
         M_bars[i].vertices = {
             // bottom face
@@ -381,6 +391,7 @@ void BarChart::localInit() {
     CamYaw = 2.7f;
 
     visualizedValues = (float *)malloc((csv.getNumVariables()-1)*sizeof(float));
+    legend->setLegend(names, colors);
 }
 	
 // Here you create your pipelines and Descriptor Sets!
@@ -649,10 +660,12 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
     static int line = 0;
 
     float valueTime = 0.1f;
+    std::vector<float> values;
 
     for (int i = 0; i < csv.getNumVariables()-1; i++) {
         float prevValue = line==0?0:std::stof(csv.getLine(line-1)[i+1]);
         float value = std::stof(csv.getLine(line)[i+1]);
+        values.push_back(visualizedValues[i]);
 
         if (!isPauseEnabled){
             visualizedValues[i] = prevValue +
@@ -699,6 +712,11 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
         World = glm::translate(glm::mat4(1), glm::vec3(groundX, 0, 0)) * glm::mat4(1);
     ubo_grid[0].mvpMat = Prj * View * World;
     DS_grid[1].map(currentImage, &ubo_grid[0], sizeof(ubo_grid[0]), 0);
+
+
+    legend->setValues(values);
+    legend->setTime(csv.getLine(line)[0]);
+    legend->mainLoop();
 }
 
 glm::mat4 BarChart::getWorldMatrixBar(float height) {

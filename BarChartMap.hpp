@@ -79,6 +79,7 @@ BarChartMap::BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates,
 // Here you load and setup all your Vulkan Models and Texutures.
 // Here you also create your Descriptor set layouts and load the shaders for the pipelines
 void BarChartMap::localInit() {
+    legend = &Legend::getInstance(window);
     DSL_bar.init(this, {
                 {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
             });
@@ -198,13 +199,18 @@ void BarChartMap::localInit() {
     }
     M_grid[1].initMesh(this, &VD_line);
 
+    std::vector<std::string> names;
+    std::vector<glm::vec3> colors;
+
     //create cilinders for bars
     ///------------------------------------------------------
     for (int i = 0; i < csv.getNumVariables()-1; i++) {
+        names.push_back(csv.getVariableNames()[i+1]);
         //create a parallelepiped of a random color
         float r = (float)rand() / (float)RAND_MAX;
         float g = (float)rand() / (float)RAND_MAX;
         float b = (float)rand() / (float)RAND_MAX;
+        colors.push_back(glm::vec3(r, g, b));
 
         glm::vec3 colour = glm::vec3{r, g, b};
 
@@ -280,6 +286,7 @@ void BarChartMap::localInit() {
     CamYaw = 2.7f;
 
     visualizedValues = (float *)malloc((csv.getNumVariables()-1)*sizeof(float));
+    legend->setLegend(names, colors);
 }
 
 // Here you create your pipelines and Descriptor Sets!
