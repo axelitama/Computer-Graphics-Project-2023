@@ -4,9 +4,11 @@
 #include "Starter.hpp"
 #include "CSVReader.hpp"
 #include "TextMaker.hpp"
+#include "Hud.hpp"
 #include "legend.hpp"
 
 std::vector<SingleText> demoText;
+
 
 class BarChart : public BaseProject {
     public:
@@ -14,6 +16,12 @@ class BarChart : public BaseProject {
         BarChart(std::string title, const CSVReader& csv, float gridDim = 10000);
 
         ~BarChart();
+
+        void pauseData() ;
+
+        void playData();
+
+        void toggleRotation();
 
     protected:
         char title[100]; // do not use std::string because text overlay wants a c_str but do not copy it (so can't use c_str() because temporary)
@@ -93,6 +101,7 @@ class BarChart : public BaseProject {
         GlobalUniformBlock gubo;
 
 	    TextMaker txt;
+	    HudMaker hud;
 
         // Other application parameters
         float CamH, CamRadius, CamPitch, CamYaw, targtH;
@@ -115,7 +124,37 @@ class BarChart : public BaseProject {
 
         glm::mat4 getWorldMatrixBar(float height);
 
+
 };
+
+
+BarChart *_BP_Ref;
+
+
+
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		double xpos, ypos;
+		glfwGetCursorPos(window, &xpos, &ypos);
+
+		int height, width;
+		glfwGetWindowSize(window, &width, &height);
+		//print xpos and ypos
+		printf("xpos: %f, ypos: %f\n", xpos, ypos);
+
+		fflush(stdout);
+        
+		if (xpos >= width-100 && xpos <= width-70 && ypos >= height-35 && ypos <= height-10) {
+			((BarChart *)_BP_Ref)->playData();
+		}else if (xpos >= width-60 && xpos <= width-30 && ypos >= height-35 && ypos <= height-10) {
+			((BarChart *)_BP_Ref)->pauseData();
+		}else if (xpos >= width-30 && xpos <= width && ypos >= height-35 && ypos <= height-10) {
+			((BarChart *)_BP_Ref)->toggleRotation();
+		}
+		
+	}
+}
+
 
 /**************************************************
 *****   TODO: Following code should have been in BarChart.cpp but that will cause multiple definition problem
@@ -379,6 +418,7 @@ void BarChart::localInit() {
     }
 
 	txt.init(this, &demoText);
+	hud.init(this);
     
     // Create the textures
     // The second parameter is the file name
@@ -392,6 +432,9 @@ void BarChart::localInit() {
 
     visualizedValues = (float *)malloc((csv.getNumVariables()-1)*sizeof(float));
     legend->setLegend(names, colors);
+
+    _BP_Ref = this;
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
 }
 	
 // Here you create your pipelines and Descriptor Sets!
@@ -430,6 +473,7 @@ void BarChart::pipelinesAndDescriptorSetsInit() {
             });
 
     txt.pipelinesAndDescriptorSetsInit();
+    hud.pipelinesAndDescriptorSetsInit();
 }
 
 // Here you destroy your pipelines and Descriptor Sets!
@@ -451,6 +495,7 @@ void BarChart::pipelinesAndDescriptorSetsCleanup() {
     DSGubo.cleanup();
 
 	txt.pipelinesAndDescriptorSetsCleanup();
+	hud.pipelinesAndDescriptorSetsCleanup();
 }
 
 // Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -478,6 +523,7 @@ void BarChart::localCleanup() {
     P_grid.destroy();
 
 	txt.localCleanup();
+	hud.localCleanup();
 }
 	
 // Here it is the creation of the command buffer:
@@ -528,6 +574,22 @@ void BarChart::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentI
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M_grid[1].indices.size()), 1, 0, 0, 0);
 		
     txt.populateCommandBuffer(commandBuffer, currentImage, 0);
+    hud.populateCommandBuffer(commandBuffer, currentImage, 0);
+}
+
+bool isAutoRotationEnabled = false;
+bool isPauseEnabled = true;
+
+void BarChart::pauseData(){
+    isPauseEnabled = true;
+}
+
+void BarChart::playData(){
+    isPauseEnabled = false;
+}
+
+void BarChart::toggleRotation(){
+    isAutoRotationEnabled = !isAutoRotationEnabled;
 }
 
 // Here is where you update the uniforms.
@@ -542,11 +604,10 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
     float deltaT;
     glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
 
-    static bool isAutoRotationEnabled = false;
     static bool wasAutoRotationPressed = false;
     bool isAutoRotationPressed = false; 
 
-    static bool isPauseEnabled = true;
+
     static bool wasPausePressed = false;
     bool isPausePressed = false;
     
@@ -607,8 +668,8 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
 
     
     // print the controls (m variable values)
-    std::cout << m.x << " " << m.y << " " << m.z << std::endl;
-    std::cout << r.x << " " << r.y << " " << r.z << std::endl;
+        // std::cout << m.x << " " << m.y << " " << m.z << std::endl;
+        // std::cout << r.x << " " << r.y << " " << r.z << std::endl;
 
 
     glm::mat4 Prj = glm::perspective(FOVy, Ar, nearPlane, farPlane);
@@ -625,7 +686,7 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
     ));
 
     // print campitch and camyaw
-    std::cout << CamPitch << " " << CamYaw << std::endl;
+    // std::cout << CamPitch << " " << CamYaw << std::endl;
 
 
 
@@ -689,10 +750,11 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
         ubo_bars[i].mvpMat = Prj * View * World;
         DS_bars[i].map(currentImage, &ubo_bars[i], sizeof(ubo_bars[i]), 0);
     }
-    printf("\ntime: %f\nline: %d\n", time, line);
-    printf("cam pitch: %f\ncam yaw: %f\n", CamPitch, CamYaw);
+    // printf("\ntime: %f\nline: %d\n", time, line);
+    // printf("cam pitch: %f\ncam yaw: %f\n", CamPitch, CamYaw);
 
     txt.update(currentImage, height, width);
+    hud.update(currentImage, height, width);
 
     if(camPos[2] > 0)
         World = glm::translate(glm::mat4(1), glm::vec3(0, 0, -groundZ)) * glm::mat4(1);
@@ -720,5 +782,8 @@ glm::mat4 BarChart::getWorldMatrixBar(float height) {
     glm::mat4 World =  glm::scale(glm::mat4(1), glm::vec3(1.f, height, 1.f));
     return World;
 }
+
+
+
 
 #endif // BARCHART_HPP

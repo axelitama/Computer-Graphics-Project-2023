@@ -268,6 +268,8 @@ void BarChartMap::localInit() {
         M_bars[i].indices.push_back(nv1 * nv2 + 1); M_bars[i].indices.push_back(nv1 * nv2 + 2 * nv1 + 1); M_bars[i].indices.push_back(nv1 * nv2 + 3);
 
         M_bars[i].initMesh(this, &VD_bar);
+        _BP_Ref = this;
+        glfwSetMouseButtonCallback(window, mouseButtonCallback);
     }
 //----------------------------------------------------------
 
@@ -276,6 +278,7 @@ void BarChartMap::localInit() {
     // The second parameter is the file name
     T.init(this,   mapFile.c_str());
 	txt.init(this, &demoText);
+	hud.init(this);
     
     // Init local variables
     CamH = 0.0f;
@@ -325,6 +328,7 @@ void BarChartMap::pipelinesAndDescriptorSetsInit() {
             });
 
     txt.pipelinesAndDescriptorSetsInit();
+    hud.pipelinesAndDescriptorSetsInit();
 }
 
 /// NOTE: need this because parent will try to use parent M_ground
@@ -373,6 +377,7 @@ void BarChartMap::populateCommandBuffer(VkCommandBuffer commandBuffer, int curre
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M_grid[1].indices.size()), 1, 0, 0, 0);
 
     txt.populateCommandBuffer(commandBuffer, currentImage, 0);
+    hud.populateCommandBuffer(commandBuffer, currentImage, 0);
 }
 
 // Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -403,6 +408,7 @@ void BarChartMap::localCleanup() {
     P_grid.destroy();
 
 	txt.localCleanup();
+	hud.localCleanup();
 }
 
 
