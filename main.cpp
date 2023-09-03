@@ -16,13 +16,14 @@ int main()
 
 	CSVReader csv(data->csv_data);
 
+
 	BaseProject *app;
 
 	if(data->mode == "barChartMap") {
 		CSVReader csv_coordinates(data->csv_coordinates);
-		app = new BarChartMap(csv, csv_coordinates, data->latitude_column, data->longitude_column, data->up, data->left, data->right, data->down, data->zoom, data->map, data->gridDim);
+		app = new BarChartMap(data->title, csv, csv_coordinates, data->latitude_column, data->longitude_column, data->up, data->left, data->right, data->down, data->zoom, data->map, data->gridDim);
 	} else if(data->mode == "barChart") {
-		app = new BarChart(csv, data->gridDim);
+		app = new BarChart(data->title, csv, data->gridDim);
 	}
 
 	delete data;

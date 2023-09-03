@@ -27,7 +27,7 @@ Legend::Legend(GLFWwindow* parentWindow)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-    childWindow = glfwCreateWindow(400, 300, "Legend Window", NULL, NULL);
+    childWindow = glfwCreateWindow(400, 300, "Legend", NULL, NULL);
     if (!childWindow) {
         fprintf(stderr, "Failed to create legend window\n");
         glfwTerminate();
@@ -41,7 +41,7 @@ Legend::Legend(GLFWwindow* parentWindow)
     int parentX, parentY;
     glfwGetWindowPos(parentWindow, &parentX, &parentY);
     // Set child window position relative to the parent
-    glfwSetWindowPos(childWindow, parentX + 10, parentY + 10);
+    glfwSetWindowPos(childWindow, parentX + 10, parentY + 60);
 
     glfwMakeContextCurrent(childWindow);
     if (!glfwGetCurrentContext()) {
@@ -126,12 +126,6 @@ void Legend::mainLoop() {
 
     glfwGetWindowPos(instance->childWindow, &windowPosX, &windowPosY);
     if(isMoved){
-        // glfwSetWindowPos(instance->childWindow, windowPosX + deltaCursorX, windowPosY + deltaCursorY);
-        // deltaCursorX = 0;
-        // deltaCursorY = 0;
-        // cursorX += deltaCursorX;
-        // cursorY += deltaCursorY;
-
         double posx, posy;
         glfwGetCursorPos(instance->childWindow, &posx, &posy);
         deltaCursorX = posx - cursorX;
@@ -140,9 +134,7 @@ void Legend::mainLoop() {
         int x, y;
         glfwGetWindowPos(instance->childWindow, &x, &y);
         glfwSetWindowPos(instance->childWindow, x + deltaCursorX, y + deltaCursorY);
-    }
-
-    if(!isMoved) {
+    } else {
         imgui_x = floor(ImGui::GetWindowPos().x);
         imgui_y = floor(ImGui::GetWindowPos().y);
         glfwGetWindowPos(instance->childWindow, &glfw_x, &glfw_y);
@@ -151,14 +143,8 @@ void Legend::mainLoop() {
     window_width = ImGui::GetWindowSize().x;
     window_height = ImGui::GetWindowSize().y;
     glfwSetWindowSize(instance->childWindow, window_width, window_height);
-    
-    // imgui_x = floor(ImGui::GetWindowPos().x);
-    // imgui_y = floor(ImGui::GetWindowPos().y);
-    // glfwGetWindowPos(instance->childWindow, &glfw_x, &glfw_y);
-    // glfwSetWindowPos(instance->childWindow, glfw_x + imgui_x, glfw_y + imgui_y);
-    // ImGui::SetWindowPos(ImVec2(0, 0));
 
-    ImGui::Text("Time: %s", time.c_str());
+    ImGui::Text("%s", time.c_str());
     ImGui::Separator();
     for(int i = 0; i < names.size(); i++) {
         ImGui::TextColored(ImVec4(colors[i].x, colors[i].y, colors[i].z, 1.0f), u8"██");

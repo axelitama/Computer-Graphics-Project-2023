@@ -6,19 +6,17 @@
 #include "TextMaker.hpp"
 #include "legend.hpp"
 
-std::vector<SingleText> demoText = {
-    {1, {"Very nice data", "", "", ""}, 0, 0},
-};
+std::vector<SingleText> demoText;
 
 class BarChart : public BaseProject {
     public:
 
-        BarChart(const CSVReader& csv, float gridDim = 10000);
+        BarChart(std::string title, const CSVReader& csv, float gridDim = 10000);
 
         ~BarChart();
 
     protected:
-
+        char title[100]; // do not use std::string because text overlay wants a c_str but do not copy it (so can't use c_str() because temporary)
         Legend * legend;
 
         float minHeight,
@@ -136,7 +134,8 @@ class BarChart : public BaseProject {
 // Example:
 
 // MAIN ! 
-BarChart::BarChart(const CSVReader& csv, float gridDim) : BaseProject(), csv(csv) {
+BarChart::BarChart(std::string title, const CSVReader& csv, float gridDim) : BaseProject(), csv(csv) {
+    strcpy(this->title, title.c_str());
     name = "Bar Chart";
     M_bars = new Model<VertexColour>[csv.getNumVariables()-1];
     DS_bars = new DescriptorSet[csv.getNumVariables()-1];
@@ -150,6 +149,10 @@ BarChart::BarChart(const CSVReader& csv, float gridDim) : BaseProject(), csv(csv
 
     groundZ = 1.5;
     groundX = csv.getNumVariables()/2.f+1;
+
+    demoText = {
+        {1, {this->title, "", "", ""}, 0, 0},
+    };
 }
 
 BarChart::~BarChart() {
@@ -705,9 +708,10 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
     ubo_grid[0].mvpMat = Prj * View * World;
     DS_grid[1].map(currentImage, &ubo_grid[0], sizeof(ubo_grid[0]), 0);
 
-
+    char str[100];
+    sprintf(str, "line: %d; time: %s", line, csv.getLine(line)[0].c_str());
+    legend->setTime(str);
     legend->setValues(values);
-    legend->setTime(csv.getLine(line)[0]);
     legend->mainLoop();
 }
 

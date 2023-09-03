@@ -3,6 +3,7 @@
 
 struct menuData {
     bool closed;
+    std::string title;
     std::string mode;
     std::string csv_data;
     std::string csv_coordinates;

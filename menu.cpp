@@ -7,7 +7,7 @@
 #include <imgui/ImGuiFileDialog.h>
 
 int selected_radio_button = 2;
-std::string mode="barChartMap", csv_data = "data/cases_by_region.csv", csv_coordinates = "data/region_coordinates.csv", map = "textures/map-47.5-20-34.5-5.png";
+std::string title="Cases by region" ,mode="barChartMap", csv_data = "data/cases_by_region.csv", csv_coordinates = "data/region_coordinates.csv", map = "textures/map-47.5-20-34.5-5.png";
 int latitude_column=2, longitude_column=3;
 float up=47.5f, down=34.5f, left=5.f, right=20.f, zoom=0.00002f;
 float gridDim = 10000;
@@ -65,6 +65,7 @@ menuData* menu() {
 
     struct menuData * data = new menuData;
     data->closed = closed;
+    data->title = title;
     data->mode = mode;
     data->csv_data = csv_data;
     data->csv_coordinates = csv_coordinates;
@@ -93,11 +94,18 @@ void mainLoop(GLFWwindow *window) {
     ImGui::SetNextWindowPos(ImVec2(0, 0));
 
     // Start a new ImGui window
-    ImGui::Begin("My Window", NULL, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
-
+    ImGui::Begin("Menu", NULL, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+    ImGui::SetWindowFontScale(1.3);
+    ImGui::Spacing();
+    char buf[100];
+    strcpy(buf, title.c_str());
+    ImGui::InputText("Title", buf, 100);
+    title = buf;
+    ImGui::Spacing();
     ImGui::Text("Which version do you want to run?");
     ImGui::RadioButton("Bar chart", &selected_radio_button, 1);
     ImGui::RadioButton("Bar chart with map", &selected_radio_button, 2);
+    ImGui::Spacing();
     
     switch(selected_radio_button) {
         case 1:
@@ -157,8 +165,10 @@ void barChartMenu() {
         // close
         ImGuiFileDialog::Instance()->Close();
     }
+    ImGui::Spacing();
 
     ImGui::InputFloat("Grid dimension", &gridDim, 0.0f, 0.0f, "%.6f");
+    ImGui::Spacing();
 }
 
 void barChartMapMenu() {
@@ -180,9 +190,12 @@ void barChartMapMenu() {
         // close
         ImGuiFileDialog::Instance()->Close();
     }
+    ImGui::Spacing();
 
     ImGui::InputInt("Latitude column", &latitude_column);
+    ImGui::Spacing();
     ImGui::InputInt("Longitude column", &longitude_column);
+    ImGui::Spacing();
 
     sprintf(button_text, "map: %s", map == "" ? "Select the map file" : map.c_str());
     // open Dialog Simple
@@ -199,13 +212,20 @@ void barChartMapMenu() {
         // close
         ImGuiFileDialog::Instance()->Close();
     }
+    ImGui::Spacing();
 
     ImGui::Text("Map coordinates bounds:");
+    ImGui::Spacing();
     ImGui::InputFloat("North latitude [degree]", &up, 0.0f, 0.0f, "%.6f");
+    ImGui::Spacing();
     ImGui::InputFloat("South latitude [degree]", &down, 0.0f, 0.0f, "%.6f");
+    ImGui::Spacing();
     ImGui::InputFloat("West longitude [degree]", &left, 0.0f, 0.0f, "%.6f");
+    ImGui::Spacing();
     ImGui::InputFloat("East longitude [degree]", &right, 0.0f, 0.0f, "%.6f");
+    ImGui::Spacing();
     ImGui::InputFloat("Map scale", &zoom, 0.0f, 0.0f, "%.6f");
+    ImGui::Spacing();
 
 }
 

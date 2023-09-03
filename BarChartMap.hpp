@@ -7,7 +7,7 @@
 class BarChartMap : public BarChart {
     public:
 
-        BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates, int latCol, int lonCol, float up, float sx, float dx, float down, const float zoom, std::string mapFile, float dimGrid);
+        BarChartMap(std::string title, const CSVReader& csv, const CSVReader& csv_coordinates, int latCol, int lonCol, float up, float sx, float dx, float down, const float zoom, std::string mapFile, float dimGrid);
 
     protected:
 
@@ -50,7 +50,7 @@ extern "C" {
 }
 
 
-BarChartMap::BarChartMap(const CSVReader& csv, const CSVReader& csv_coordinates, int latCol, int lonCol, float up, float sx, float dx, float down, const float zoom, std::string mapFile, float dimGrid = 10000) : BarChart(csv, dimGrid){
+BarChartMap::BarChartMap(std::string title, const CSVReader& csv, const CSVReader& csv_coordinates, int latCol, int lonCol, float up, float sx, float dx, float down, const float zoom, std::string mapFile, float dimGrid = 10000) : BarChart(title, csv, dimGrid){
     up = degreeLatitudeToY(up);
     sx = degreeLongitudeToX(sx);
     dx = degreeLongitudeToX(dx);
