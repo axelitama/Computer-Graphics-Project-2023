@@ -7,7 +7,7 @@
 class BarChartMap : public BarChart {
     public:
 
-        BarChartMap(std::string title, const CSVReader& csv, const CSVReader& csv_coordinates, int latCol, int lonCol, float up, float sx, float dx, float down, const float zoom, std::string mapFile, float dimGrid);
+        BarChartMap(std::string title, std::string shaderPath, const CSVReader& csv, const CSVReader& csv_coordinates, int latCol, int lonCol, float up, float sx, float dx, float down, const float zoom, std::string mapFile, float dimGrid);
 
     protected:
 
@@ -50,7 +50,7 @@ extern "C" {
 }
 
 
-BarChartMap::BarChartMap(std::string title, const CSVReader& csv, const CSVReader& csv_coordinates, int latCol, int lonCol, float up, float sx, float dx, float down, const float zoom, std::string mapFile, float dimGrid = 10000) : BarChart(title, csv, dimGrid){
+BarChartMap::BarChartMap(std::string title, std::string shaderPath, const CSVReader& csv, const CSVReader& csv_coordinates, int latCol, int lonCol, float up, float sx, float dx, float down, const float zoom, std::string mapFile, float dimGrid = 10000) : BarChart(title, shaderPath, csv, dimGrid){
     up = degreeLatitudeToY(up);
     sx = degreeLongitudeToX(sx);
     dx = degreeLongitudeToX(dx);
@@ -154,9 +154,9 @@ void BarChartMap::localInit() {
     // Third and fourth parameters are respectively the vertex and fragment shaders
     // The last array, is a vector of pointer to the layouts of the sets that will
     // be used in this pipeline. The first element will be set 0, and so on..
-    P_ground.init(this, &VD_ground, "shaders/ShaderVert.spv", "shaders/ShaderFrag.spv", {&DSL_ground, &DSLGubo});
-    P_grid.init(this, &VD_line, "shaders/ShaderLineVert.spv", "shaders/ShaderLineFrag.spv", {&DSL_grid, &DSLGubo});
-    P_bar.init(this, &VD_bar, "shaders/ShaderBarVert.spv", "shaders/ShaderBarFrag.spv", {&DSL_bar, &DSLGubo});
+    P_ground.init(this, &VD_ground, shaderDir + "ShaderGround.vert.spv", shaderDir + "ShaderGround.frag.spv", {&DSL_ground, &DSLGubo});
+    P_grid.init(this, &VD_line, shaderDir + "ShaderLine.vert.spv", shaderDir + "ShaderLine.frag.spv", {&DSL_grid, &DSLGubo});
+    P_bar.init(this, &VD_bar, shaderDir + "ShaderBar.vert.spv", shaderDir + "ShaderBar.frag.spv", {&DSL_bar, &DSLGubo});
 
 
     // Models, textures and Descriptors (values assigned to the uniforms)

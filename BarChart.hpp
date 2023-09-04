@@ -8,12 +8,12 @@
 #include "legend.hpp"
 
 std::vector<SingleText> demoText;
+std::string shaderDir;
 
 
 class BarChart : public BaseProject {
     public:
-
-        BarChart(std::string title, const CSVReader& csv, float gridDim = 10000);
+        BarChart(std::string title, std::string shaderPath, const CSVReader& csv, float gridDim = 10000);
 
         ~BarChart();
 
@@ -173,8 +173,9 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 // Example:
 
 // MAIN ! 
-BarChart::BarChart(std::string title, const CSVReader& csv, float gridDim) : BaseProject(), csv(csv) {
+BarChart::BarChart(std::string title, std::string shaderPath, const CSVReader& csv, float gridDim) : BaseProject(), csv(csv) {
     strcpy(this->title, title.c_str());
+    shaderDir = shaderPath;
     name = "Bar Chart";
     M_bars = new Model<VertexColour>[csv.getNumVariables()-1];
     DS_bars = new DescriptorSet[csv.getNumVariables()-1];
@@ -311,11 +312,14 @@ void BarChart::localInit() {
     // Third and fourth parameters are respectively the vertex and fragment shaders
     // The last array, is a vector of pointer to the layouts of the sets that will
     // be used in this pipeline. The first element will be set 0, and so on..
-    P_ground.init(this, &VD_ground, "shaders/ShaderBarVert.spv", "shaders/ShaderBarFrag.spv", {&DSL_ground, &DSLGubo});
 
-    P_bar.init(this, &VD_bar, "shaders/ShaderBarVert.spv", "shaders/ShaderBarFrag.spv", {&DSL_bar, &DSLGubo});
+    //get executable path
 
-    P_grid.init(this, &VD_line, "shaders/ShaderLineVert.spv", "shaders/ShaderLineFrag.spv", {&DSL_grid, &DSLGubo});
+    P_ground.init(this, &VD_ground, shaderDir + "ShaderBar.vert.spv", shaderDir + "ShaderBar.frag.spv", {&DSL_ground, &DSLGubo});
+
+    P_bar.init(this, &VD_bar, shaderDir + "ShaderBar.vert.spv", shaderDir + "ShaderBar.frag.spv", {&DSL_bar, &DSLGubo});
+
+    P_grid.init(this, &VD_line, shaderDir + "ShaderLine.vert.spv", shaderDir + "ShaderLine.frag.spv", {&DSL_grid, &DSLGubo});
 
 
     // Models, textures and Descriptors (values assigned to the uniforms)

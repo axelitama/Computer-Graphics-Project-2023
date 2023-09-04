@@ -53,16 +53,19 @@ $(OBJDIR)/%.o: %.c | dependencies
 
 
 SHADERSDIR=shaders
+SHADERBIN=$(BINDIR)/shaders
 SHADERS=$(wildcard $(SHADERSDIR)/*.vert) $(wildcard $(SHADERSDIR)/*.frag)
-SHADEROUT=$(patsubst $(SHADERSDIR)/%.vert, $(SHADERSDIR)/%Vert.spv, $(SHADERS)) $(patsubst $(SHADERSDIR)/%.frag, $(SHADERSDIR)/%Frag.spv, $(SHADERS))
-SHADERSPV=$(wildcard $(SHADERSDIR)/*.spv)
+SHADEROUT=$(patsubst $(SHADERSDIR)/%.vert, $(SHADERBIN)/%.vert.spv, $(SHADERS)) $(patsubst $(SHADERSDIR)/%.frag, $(SHADERBIN)/%.frag.spv, $(SHADERS))
+SHADERSPV=$(wildcard $(SHADERBIN)/*.spv)
 
 shaders: $(SHADEROUT)
 
-$(SHADERSDIR)/%Vert.spv: $(SHADERSDIR)/%.vert
+$(SHADERBIN)/%.vert.spv: $(SHADERSDIR)/%.vert
+	mkdir -p $(dir $@)
 	glslc $< -o $@
 
-$(SHADERSDIR)/%Frag.spv: $(SHADERSDIR)/%.frag
+$(SHADERBIN)/%.frag.spv: $(SHADERSDIR)/%.frag
+	mkdir -p $(dir $@)
 	glslc $< -o $@
 
 clean: # do not clean libsobj
