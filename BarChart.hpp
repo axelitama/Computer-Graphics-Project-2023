@@ -185,7 +185,7 @@ BarChart::BarChart(std::string title, const CSVReader& csv, float gridDim) : Bas
     scalingFactor = 20/csv.getMaxValue(excludeCol, 1);//0.0001;
     printf("scaling: %f", scalingFactor);
     this->gridDim = gridDim;
-    gridLinesWidth = 0.5f;
+    gridLinesWidth = 0.1f;
     gridColor = {0.5, 0.5, 0.5};
 
     groundZ = 1.5;
