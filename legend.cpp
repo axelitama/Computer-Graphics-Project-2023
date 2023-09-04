@@ -27,7 +27,7 @@ Legend::Legend(GLFWwindow* parentWindow)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-    childWindow = glfwCreateWindow(400, 300, "Legend", NULL, NULL);
+    childWindow = glfwCreateWindow(300, 450, "Legend", NULL, NULL);
     if (!childWindow) {
         fprintf(stderr, "Failed to create legend window\n");
         glfwTerminate();
@@ -149,7 +149,7 @@ void Legend::mainLoop() {
     for(int i = 0; i < names.size(); i++) {
         ImGui::TextColored(ImVec4(colors[i].x, colors[i].y, colors[i].z, 1.0f), u8"██");
         ImGui::SameLine();
-        ImGui::Text("  %s:  %f", names[i].c_str(), values[i]);
+        ImGui::Text("  %s:  %.2f", names[i].c_str(), values[i]);
     }
 
     ImGui::End();
