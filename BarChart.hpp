@@ -180,8 +180,10 @@ BarChart::BarChart(std::string title, const CSVReader& csv, float gridDim) : Bas
     DS_bars = new DescriptorSet[csv.getNumVariables()-1];
     ubo_bars = new UniformBlock[csv.getNumVariables()-1];
 
-    minHeight = 0.000001f;
-    scalingFactor = 0.0001;
+    minHeight = 0.001f;
+    int excludeCol[1] = {0}; 
+    scalingFactor = 20/csv.getMaxValue(excludeCol, 1);//0.0001;
+    printf("scaling: %f", scalingFactor);
     this->gridDim = gridDim;
     gridLinesWidth = 0.5f;
     gridColor = {0.5, 0.5, 0.5};

@@ -53,7 +53,7 @@ void CSVReader::readData() {
     }
 }
 
-float CSVReader::getMaxValue(int *excludeColumns, int numExcludeColumns) {
+float CSVReader::getMaxValue(int *excludeColumns, int numExcludeColumns) const {
     float maxValue = 0.0;
     for (int i = 0; i < data.size(); i++) {
         for (int j = 0; j < data[i].size(); j++) {
