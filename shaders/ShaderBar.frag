@@ -23,7 +23,7 @@ void main() {
 
     // Blinn-Phong specular reflection
     vec3 halfwayDir = normalize(lightDir + viewDir);
-    int shininess = 1000;
+    int shininess = 100;
     float specularFactor = pow(max(0.0, dot(normal, halfwayDir)), shininess);
 
     // Compute direct diffuse and specular lighting
