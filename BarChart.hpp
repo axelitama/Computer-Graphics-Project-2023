@@ -139,8 +139,6 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
 		int height, width;
 		glfwGetWindowSize(window, &width, &height);
-		//print xpos and ypos
-		printf("xpos: %f, ypos: %f\n", xpos, ypos);
 
 		fflush(stdout);
         
@@ -671,7 +669,8 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
         CamYaw -= r.y * rotSpeed * deltaT;
     }
 
-    
+    if (CamRadius>50.0f)
+        CamRadius = 50.0f;
     // print the controls (m variable values)
         // std::cout << m.x << " " << m.y << " " << m.z << std::endl;
         // std::cout << r.x << " " << r.y << " " << r.z << std::endl;
@@ -721,7 +720,7 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
     time += deltaT;
     static int line = 0;
 
-    float valueTime = 0.1f;
+    float valueTime = 0.5f;
     std::vector<float> values;
 
     for (int i = 0; i < csv.getNumVariables()-1; i++) {
