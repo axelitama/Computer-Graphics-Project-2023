@@ -15,7 +15,7 @@ layout(set = 1, binding = 0) uniform GlobalUniformBlock {
 
 void main() {
     vec3 normal = normalize(inNormal);
-    vec3 lightDir = normalize(-gubo.DlightDir);
+    vec3 lightDir = normalize(gubo.DlightDir);
     vec3 viewDir = normalize(gubo.eyePos - gl_FragCoord.xyz);
 
     // Lambertian diffuse factor

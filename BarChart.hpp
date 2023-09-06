@@ -700,7 +700,7 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
 
     glm::mat4 View = glm::lookAt(camPos, camTarget, glm::vec3(0,1,0));
 
-    gubo.DlightDir = glm::normalize(glm::vec3(-0.5, -1, -0.5));
+    gubo.DlightDir = glm::normalize(glm::vec3(1, 3, 1));
     gubo.DlightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     gubo.AmbLightColor = glm::vec3(0.1f);
     gubo.eyePos = camPos;

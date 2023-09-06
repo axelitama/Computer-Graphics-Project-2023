@@ -38,7 +38,7 @@ float OrenNayarDiffuse(vec3 V, vec3 N, vec3 L, float sigma)
 
 void main() {
     vec3 normal = normalize(inNormal);
-    vec3 lightDir = normalize(-gubo.DlightDir);
+    vec3 lightDir = normalize(gubo.DlightDir);
     vec3 viewDir = normalize(gubo.eyePos - gl_FragCoord.xyz);
 
     // Oren-Nayar diffuse factor
