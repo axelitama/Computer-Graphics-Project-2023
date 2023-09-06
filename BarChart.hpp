@@ -317,7 +317,7 @@ void BarChart::localInit() {
 
     P_bar.init(this, &VD_bar, shaderDir + "ShaderBar.vert.spv", shaderDir + "ShaderBar.frag.spv", {&DSL_bar, &DSLGubo});
 
-    P_grid.init(this, &VD_line, shaderDir + "ShaderLine.vert.spv", shaderDir + "ShaderLine.frag.spv", {&DSL_grid, &DSLGubo});
+    P_grid.init(this, &VD_line, shaderDir + "ShaderLine.vert.spv", shaderDir + "ShaderLine.frag.spv", {&DSL_grid});
 
 
     // Models, textures and Descriptors (values assigned to the uniforms)
@@ -571,7 +571,6 @@ void BarChart::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentI
     }
 
     P_grid.bind(commandBuffer);
-    DSGubo.bind(commandBuffer, P_grid, 1, currentImage);
     DS_grid[0].bind(commandBuffer, P_grid, 0, currentImage);
     M_grid[0].bind(commandBuffer);
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M_grid[0].indices.size()), 1, 0, 0, 0);
