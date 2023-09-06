@@ -15,16 +15,16 @@ layout(set = 1, binding = 0) uniform GlobalUniformBlock {
 
 void main() {
     vec3 normal = normalize(inNormal);
-    vec3 lightDir = normalize(-gubo.DlightDir);
+    vec3 lightDir = normalize(gubo.DlightDir);
     vec3 viewDir = normalize(gubo.eyePos - gl_FragCoord.xyz);
 
     // Lambertian diffuse factor
-    float diffuseFactor = max(0.0, dot(normal, lightDir));
+    float diffuseFactor = clamp(dot(normal, lightDir), 0.0f, 1.0f);
 
     // Blinn-Phong specular reflection
     vec3 halfwayDir = normalize(lightDir + viewDir);
     int shininess = 100;
-    float specularFactor = pow(max(0.0, dot(normal, halfwayDir)), shininess);
+    float specularFactor = clamp(pow(max(0.0, dot(normal, halfwayDir)), shininess), 0.0f, 1.0f);
 
     // Compute direct diffuse and specular lighting
     vec3 directDiffuse = gubo.DlightColor * diffuseFactor;
@@ -34,7 +34,7 @@ void main() {
     vec3 ambient = gubo.AmbLightColor;
 
     // Combine ambient, diffuse, and specular lighting
-    vec3 finalColor = inColour * (ambient + directDiffuse) + directSpecular;
+    vec3 finalColor = clamp(inColour * (ambient + directDiffuse) + directSpecular, 0.0f, 1.0f);
 
     outColor = vec4(finalColor, 1.0f);    // Final color with lighting
 }
