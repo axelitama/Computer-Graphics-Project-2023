@@ -139,8 +139,6 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
 		int height, width;
 		glfwGetWindowSize(window, &width, &height);
-
-		fflush(stdout);
         
 		if (xpos >= width-100 && xpos <= width-70 && ypos >= height-35 && ypos <= height-10) {
 			((BarChart *)_BP_Ref)->playData();
@@ -500,6 +498,8 @@ void BarChart::pipelinesAndDescriptorSetsCleanup() {
 
 	txt.pipelinesAndDescriptorSetsCleanup();
 	hud.pipelinesAndDescriptorSetsCleanup();
+
+    free(visualizedValues);
 }
 
 // Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -726,10 +726,12 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
     float valueTime = 0.5f;
     std::vector<float> values;
 
+    
+    // every valueTime seconds, we change the line of the csv file to be read and therefore update the bars
+    
     for (int i = 0; i < csv.getNumVariables()-1; i++) {
         float prevValue = line==0?0:std::stof(csv.getLine(line-1)[i+1]);
         float value = std::stof(csv.getLine(line)[i+1]);
-        values.push_back(visualizedValues[i]);
 
         if (!isPauseEnabled){
             visualizedValues[i] = prevValue +
@@ -739,17 +741,17 @@ void BarChart::updateUniformBuffer(uint32_t currentImage) {
         {
             visualizedValues[i] = prevValue;
         }
+        
+        values.push_back(visualizedValues[i]);
     }
     
-    
-    // every valueTime seconds, we change the line of the csv file to be read and therefore update the bars
     if(time >= valueTime) {
         time = 0;
         if(!isPauseEnabled)
             line++;
         animationTime = 0;
         if(line >= csv.getNumLines())
-            line = 0; //qua potremmo mostrare un messaggio sull'overlay che dice premi "tasto" per ricominciare
+            line = 0;
     }
 
     for (int i = 0; i < csv.getNumVariables()-1; i++) {

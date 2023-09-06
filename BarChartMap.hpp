@@ -214,7 +214,7 @@ void BarChartMap::localInit() {
 
         glm::vec3 colour = glm::vec3{r, g, b};
 
-        int nv1 = 100, nv2 = 100;
+        int nv1 = 100, nv2 = 2;
         float x, y, z;
         glm::vec3 normal;
 

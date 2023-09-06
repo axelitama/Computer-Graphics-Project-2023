@@ -11,8 +11,6 @@ layout(set = 0, binding = 1) uniform UniformBufferObject {
 } ubo;
 
 void main() {
-    vec2 position = inPosition;
-    gl_Position = ubo.mvpMat * vec4(position.x, position.y, 0.0, 1.0);
-    vec2 uv = inUV;
-    fragTexCoord = uv;
+    gl_Position = ubo.mvpMat * vec4(inPosition.x, inPosition.y, 0.0, 1.0);
+    fragTexCoord = inUV;
 }
