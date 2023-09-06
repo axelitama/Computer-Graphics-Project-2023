@@ -43,12 +43,12 @@ void main() {
 
     // Oren-Nayar diffuse factor
     float roughness = 0.2;
-    float diffuseFactor = OrenNayarDiffuse(viewDir, normal, lightDir, roughness);
+    float diffuseFactor = clamp(OrenNayarDiffuse(viewDir, normal, lightDir, roughness), 0.0f, 1.0f);
 
     // Blinn-Phong specular reflection
     vec3 halfwayDir = normalize(lightDir + viewDir);
     int shininess = 50;
-    float specularFactor = pow(max(0.0, dot(normal, halfwayDir)), shininess);
+    float specularFactor = clamp(pow(max(0.0, dot(normal, halfwayDir)), shininess), 0.0f, 1.0f);
 
     // Compute diffuse and specular lighting
     vec3 directDiffuse = gubo.DlightColor * diffuseFactor;
@@ -58,7 +58,7 @@ void main() {
     vec3 ambient = gubo.AmbLightColor;
 
     // Combine ambient, diffuse, and specular lighting
-    vec3 finalColor = texture(tex, inUV).rgb * (ambient + directDiffuse) + directSpecular;
+    vec3 finalColor = clamp(texture(tex, inUV).rgb * (ambient + directDiffuse) + directSpecular, 0.0f, 1.0f);
 
     outColor = vec4(finalColor, 1.0f);    // Final color with lighting
 }
