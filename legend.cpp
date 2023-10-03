@@ -59,7 +59,7 @@ Legend::Legend(GLFWwindow* parentWindow)
     builder.AddText(u8"█");
     builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
     builder.BuildRanges(&ranges);
-    io.Fonts->AddFontFromFileTTF("fonts/Courier New Bold.ttf", 15, NULL, ranges.Data); // load a font that can print the █ character
+    io.Fonts->AddFontFromFileTTF("fonts/liberation-fonts-ttf-2.00.1/LiberationMono-Bold.ttf", 15, NULL, ranges.Data); // load a font that can print the █ character
     io.Fonts->Build();
     (void)io; // Prevents unused variable warning
     ImGui_ImplGlfw_InitForOpenGL(childWindow, true);
