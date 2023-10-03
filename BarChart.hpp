@@ -498,8 +498,6 @@ void BarChart::pipelinesAndDescriptorSetsCleanup() {
 
 	txt.pipelinesAndDescriptorSetsCleanup();
 	hud.pipelinesAndDescriptorSetsCleanup();
-
-    free(visualizedValues);
 }
 
 // Here you destroy all the Models, Texture and Desc. Set Layouts you created!
