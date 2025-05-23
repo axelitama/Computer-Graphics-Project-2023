@@ -4,6 +4,11 @@ A C++ application for visualising time-evolving data as animated 3D bar charts, 
 
 Developed for the course of Computer Graphics (Digital Logic Design) y. 2023 at Politecnico di Milano.
 
+<p align="center">
+  <img src="resources/screenshot.png" alt="screenshot"/>
+</p>
+
+
 **Features**  
 - Animated 3D rendering with Vulkan
 - Visual effects via GLSL shaders
