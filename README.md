@@ -46,3 +46,5 @@ With map overlay:
 | Zoom in / out        | `W` / `S`       |
 | Manual rotation      | `←` `→`         |
 | Change inclination   | `↑` `↓`         |
+
+Controls can also be performed using mouse, trackpad, or a joystick.
