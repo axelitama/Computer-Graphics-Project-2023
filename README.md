@@ -48,3 +48,7 @@ With map overlay:
 | Change inclination   | `↑` `↓`         |
 
 Controls can also be performed using mouse, trackpad, or a joystick.
+
+## Examples
+
+[data](data) and [textures](textures) folders contain respectively examples of input csv and map image.
