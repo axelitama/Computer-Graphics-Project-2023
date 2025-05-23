@@ -41,8 +41,8 @@ With map overlay:
 
 | Action               | Key / GUI       |
 | -------------------- | --------------- |
-| Play / Pause time    | `Space` / ▶︎ ⏸️ |
-| Toggle auto-rotation | `Q` / 🔄        |
+| Play / Pause time    | `Space` / ▶ ⏸  |
+| Toggle auto-rotation | `Q` / ⟳         |
 | Zoom in / out        | `W` / `S`       |
 | Manual rotation      | `←` `→`         |
 | Change inclination   | `↑` `↓`         |
