@@ -43,7 +43,7 @@ With map overlay:
 | -------------------- | --------------- |
 | Play / Pause time    | `Space` / ▶ ⏸  |
 | Toggle auto-rotation | `Q` / ⟳         |
-| Zoom in / out        | `W` / `S`       |
+| Zoom in / out        | `W` `S`       |
 | Manual rotation      | `←` `→`         |
 | Change inclination   | `↑` `↓`         |
 
